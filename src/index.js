@@ -13,6 +13,7 @@ const token = process.env.TOKEN;
 
 client.commands = new Collection();
 
+// Command files iterator
 const commandFiles = fs
   .readdirSync("./src/commands")
   .filter((file) => file.endsWith(".js"));
@@ -23,9 +24,20 @@ for (const file of commandFiles) {
   client.commands.set(command.data.name, command);
 }
 
-client.once("ready", () => {
-  console.log(`Claimer Bot is online!`);
-});
+// Event files iterator
+const eventFiles = fs
+  .readdirSync("./src/events")
+  .filter((file) => file.endsWith(".js"));
+
+for (const file of eventFiles) {
+  const event = require(`./events/${file}`);
+
+  if (event.once) {
+    client.once(event.name, (...args) => event.execute(...args));
+  } else {
+    client.on(event.name, (...args) => event.execute(...args));
+  }
+}
 
 client.on("interactionCreate", async (interaction) => {
   if (!interaction.isCommand()) return;
