@@ -2,14 +2,18 @@
   "name": "claimer-bot",
   "version": "1.0.0",
   "description": "discord bot for claiming spots on mir4",
-  "main": "main.js",
+  "main": "index.js",
   "repository": "https://github.com/cptvictor95/claimer-bot.git",
   "author": "Victor Torres",
   "license": "MIT",
   "scripts": {
-    "dev": "nodemon src/main.js"
+    "dev": "nodemon src/index.js",
+    "deploy": "node src/deploy-commands.js"
   },
   "dependencies": {
+    "@discordjs/builders": "^0.8.1",
+    "@discordjs/rest": "^0.1.0-canary.0",
+    "discord-api-types": "^0.24.0",
     "discord.js": "^13.2.0",
     "dotenv": "^10.0.0"
   },
