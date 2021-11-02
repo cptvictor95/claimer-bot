@@ -1,4 +1,5 @@
 const { SlashCommandBuilder } = require("@discordjs/builders");
+const fs = require("fs");
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -6,11 +7,17 @@ module.exports = {
     .setDescription(
       "Claim magic square spot based on Floor, Chamber Name and Number and Tickets used (2 tickets maximum)"
     )
-    .addIntegerOption((option) =>
+    .addStringOption((option) =>
       option
         .setName("floor")
-        .setDescription("Magic Square Floor Number (1 to 6)")
+        .setDescription("Magic Square Floor Number (1F-6F)")
         .setRequired(true)
+        .addChoice("1F", "1F")
+        .addChoice("2F", "2F")
+        .addChoice("3F", "3F")
+        .addChoice("4F", "4F")
+        .addChoice("5F", "5F")
+        .addChoice("6F", "6F")
     )
     .addStringOption((option) =>
       option
@@ -20,7 +27,7 @@ module.exports = {
         )
         .setRequired(true)
         .addChoice("Gold Chamber", "Gold Chamber")
-        .addChoice("Silver Chamber", "Silver Chamber")
+        .addChoice("White Silver Chamber", "White Silver Chamber")
         .addChoice("Experience Chamber", "Experience Chamber")
         .addChoice("Training Chamber", "Training Chamber")
         .addChoice("Magic Stone Chamber", "Magic Stone Chamber")
@@ -45,16 +52,31 @@ module.exports = {
   async execute(interaction) {
     try {
       if (!interaction.isCommand) return;
-
-      const floor = interaction.options.getInteger("floor");
+      const floor = interaction.options.getString("floor");
       const chamberName = interaction.options.getString("chambername");
       const chamberNumber = interaction.options.getString("chambernumber");
       const tickets = interaction.options.getString("tickets");
 
+      let queue = JSON.parse(fs.readFileSync("./src/data/queue.json"));
+      console.info("queue", queue);
+
+      const player = {
+        userName: interaction.user.username,
+        spot: {
+          floor: floor,
+          name: chamberName,
+          number: chamberNumber,
+          tickets: tickets,
+        },
+      };
+
+      console.info("playerToEnqueue", player);
+      fs.writeFileSync("./src/data/queue.json", JSON.stringify(player));
+
       await interaction.reply(
         `${interaction.user.username} claimed ${
           chamberName.charAt(0).toUpperCase() + chamberName.slice(1)
-        } ${chamberNumber} on ${floor}F for ${tickets} tickets`
+        } ${chamberNumber} on ${floor} for ${tickets}.`
       );
     } catch (error) {
       await interaction.reply({
