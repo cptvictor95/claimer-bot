@@ -1,6 +1,11 @@
 const { SlashCommandBuilder } = require("@discordjs/builders");
 const fs = require("fs");
 
+/** To Do
+ * [x] Add more than 1 user to queue array
+ * [] Add startedAt(UTC - Hora, Minuto, segundo || msegundo) Property to queue player object
+ */
+
 module.exports = {
   data: new SlashCommandBuilder()
     .setName("claim")
@@ -52,6 +57,13 @@ module.exports = {
   async execute(interaction) {
     try {
       if (!interaction.isCommand) return;
+      if (interaction.commandName === "claim");
+
+      const date = Date.now();
+      const formattedDate = new Date(date).toISOString().slice(11, 19);
+      const startedAt = date;
+      const endsAt = date + 3600000;
+
       const floor = interaction.options.getString("floor");
       const chamberName = interaction.options.getString("chambername");
       const chamberNumber = interaction.options.getString("chambernumber");
@@ -68,10 +80,14 @@ module.exports = {
           number: chamberNumber,
           tickets: tickets,
         },
+        startedAt: startedAt,
+        endsAt: endsAt,
       };
 
       console.info("playerToEnqueue", player);
-      fs.writeFileSync("./src/data/queue.json", JSON.stringify(player));
+      let newQueue = queue;
+      newQueue.push(player);
+      fs.writeFileSync("./src/data/queue.json", JSON.stringify(newQueue));
 
       await interaction.reply(
         `${interaction.user.username} claimed ${
