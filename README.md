@@ -5,8 +5,23 @@ This is a discord bot created for organizational purposes on Mir4's Magic Square
 ## Bot Commands
 
 - /ping
+--This command is used for testing, if everithing its running correct, you should receive a message *Pong* indicating
+that the bot receives and send infos.
+
 - /server
+--Server command shows what server you are in, and how many users is on the same discord server
+
 - /user
+--User command shows user infos like Id and Tagname
+
+- /help
+--Help command shows all the commands for user usage
+
+- /queue
+--Queue command shows the queue length and users positions inside that queue that the user asks for in the textline
+
+- /claim
+--Claim command puts the user on the queue, select infos like what floor and chamber you want to queue for and you are in.
 
 ## Usage instructions
 
