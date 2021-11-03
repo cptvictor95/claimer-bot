@@ -60,7 +60,7 @@ module.exports = {
       if (interaction.commandName === "claim");
 
       const date = Date.now();
-      const formattedDate = new Date(date).toISOString().slice(11, 19);
+      // const formattedDate = new Date(date).toISOString().slice(11, 19);
       const startedAt = date;
       const endsAt = date + 3600000;
 
@@ -68,9 +68,6 @@ module.exports = {
       const chamberName = interaction.options.getString("chambername");
       const chamberNumber = interaction.options.getString("chambernumber");
       const tickets = interaction.options.getString("tickets");
-
-      let queue = JSON.parse(fs.readFileSync("./src/data/queue.json"));
-      console.info("queue", queue);
 
       const player = {
         userName: interaction.user.username,
@@ -84,9 +81,11 @@ module.exports = {
         endsAt: endsAt,
       };
 
-      console.info("playerToEnqueue", player);
+      let queue = JSON.parse(fs.readFileSync("./src/data/queue.json"));
       let newQueue = queue;
+
       newQueue.push(player);
+
       fs.writeFileSync("./src/data/queue.json", JSON.stringify(newQueue));
 
       await interaction.reply(
