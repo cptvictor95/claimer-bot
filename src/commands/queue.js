@@ -28,6 +28,12 @@ class Queue {
   }
 }
 
+/** To Do
+ * [x] Transform json queue into a array of objects
+ * [x] Add more than 1 user to queue array
+ * [] Show startedAt(UTC - Hora, Minuto, segundo || msegundo) Property on queue of each player
+ */
+
 module.exports = {
   data: new SlashCommandBuilder()
     .setName("queue")
