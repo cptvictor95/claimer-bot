@@ -1,11 +1,12 @@
 const fs = require("fs");
 const { Client, Intents, Collection } = require("discord.js");
+const claim = require("./commands/claim");
 
 const client = new Client({
   intents: [Intents.FLAGS.GUILDS],
 });
 
-console.clear();
+// console.clear();
 
 require("dotenv").config();
 
@@ -40,3 +41,18 @@ for (const file of eventFiles) {
 }
 
 client.login(`${token}`);
+
+client.on("ready", () => {
+  setInterval(() => {
+    let queue = JSON.parse(fs.readFileSync("./src/data/queue.json"));
+    const newQueue = eval(queue);
+    const date = Date.now();
+    if (newQueue.length === 0) return;
+    if (newQueue[0].endsAt <= date) {
+      console.log("TESTE01");
+      newQueue.shift();
+      console.log("QUEUE:", newQueue);
+      fs.writeFileSync("./src/data/queue.json", JSON.stringify(newQueue));
+    }
+  }, 200);
+});

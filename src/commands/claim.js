@@ -51,23 +51,50 @@ module.exports = {
         .setName("tickets")
         .setDescription("Number of tickets used: 1 or 2")
         .setRequired(true)
-        .addChoice("1", "30 minutes")
-        .addChoice("2", "1 hour")
+        .addChoice("1", "30")
+        .addChoice("2", "60")
     ),
   async execute(interaction) {
     try {
       if (!interaction.isCommand) return;
       if (interaction.commandName === "claim");
-
-      const date = Date.now();
-      // const formattedDate = new Date(date).toISOString().slice(11, 19);
-      const startedAt = date;
-      const endsAt = date + 3600000;
-
       const floor = interaction.options.getString("floor");
       const chamberName = interaction.options.getString("chambername");
       const chamberNumber = interaction.options.getString("chambernumber");
       const tickets = interaction.options.getString("tickets");
+
+      const date = Date.now();
+      // const formattedDate = new Date(date).toISOString().slice(11, 19);
+
+      let queueDateCalc = JSON.parse(fs.readFileSync("./src/data/queue.json"));
+      let newQueueDateCalc = eval(queueDateCalc);
+
+      let startedAt = date;
+      let endsAt = startedAt;
+      console.log("date", date);
+
+      if (newQueueDateCalc.length == 1) {
+        const endsAt01 = queueDateCalc[0].endsAt;
+        startedAt = endsAt01;
+      }
+
+      if (newQueueDateCalc.length > 1) {
+        const ticketsMap = newQueueDateCalc.map((player) => {
+          return Number(player.spot.tickets);
+        });
+        const soma = ticketsMap.reduce((a, b) => a + b, 0);
+        const position01 = date - queueDateCalc[0].startedAt;
+        console.log("position01", position01);
+        const result = soma * 60000 - position01;
+        console.log("soma", result);
+        startedAt = date + result;
+      }
+
+      if (tickets == "30") {
+        endsAt = startedAt + 1800000;
+      } else {
+        endsAt = startedAt + 3600000;
+      }
 
       const player = {
         userName: interaction.user.username,
@@ -83,7 +110,7 @@ module.exports = {
 
       let queue = JSON.parse(fs.readFileSync("./src/data/queue.json"));
       let newQueue = queue;
-
+      console.log("player", player);
       newQueue.push(player);
 
       fs.writeFileSync("./src/data/queue.json", JSON.stringify(newQueue));
@@ -91,7 +118,7 @@ module.exports = {
       await interaction.reply(
         `${interaction.user.username} claimed ${
           chamberName.charAt(0).toUpperCase() + chamberName.slice(1)
-        } ${chamberNumber} on ${floor} for ${tickets}.`
+        } ${chamberNumber} on ${floor} for ${tickets} minutes.`
       );
     } catch (error) {
       await interaction.reply({
