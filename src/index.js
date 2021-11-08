@@ -60,7 +60,7 @@ client.on("ready", () => {
       newQueue.shift();
       fs.writeFileSync("./src/data/queue.json", JSON.stringify(newQueue));
       channel.send(
-        `${newQueue[0]}, You are ready to go! Enter the magic square!`
+        `${newQueue[0].userName}, You are ready to go! Enter the magic square!`
       );
     }
   }, 100);

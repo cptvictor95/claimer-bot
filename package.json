@@ -7,7 +7,7 @@
   "author": "Victor Torres",
   "license": "MIT",
   "scripts": {
-    "dev": "nodemon src/index.js",
+    "dev": "node src/index.js",
     "deploy": "node src/deploy-commands.js"
   },
   "dependencies": {

@@ -1,4 +1,5 @@
 const { SlashCommandBuilder } = require("@discordjs/builders");
+const { Client } = require("discord.js");
 const fs = require("fs");
 
 /** To Do
@@ -71,7 +72,16 @@ module.exports = {
 
       let startedAt = date;
       let endsAt = startedAt;
+      let timeToEnter;
       let minutesLeft;
+
+      const client = interaction.client;
+      const guild = client.guilds.cache.get("903985002650411049");
+      const channel = guild.channels.cache.get("903985002650411052");
+
+      const user = client.users.cache.find(
+        (u) => u.tag === `${interaction.user.tag}`
+      );
 
       if (newQueueDateCalc.length == 1) {
         const endsAt01 = queueDateCalc[0].endsAt;
@@ -89,7 +99,7 @@ module.exports = {
         startedAt = date + result;
       }
       if (newQueueDateCalc.length > 0) {
-        const timeToEnter = startedAt - date;
+        timeToEnter = startedAt - date;
         minuteTimeToEnter = timeToEnter / 60000;
         const formattedMinute = minuteTimeToEnter.toString().slice(0, 3);
         minutesLeft = formattedMinute;
@@ -120,29 +130,30 @@ module.exports = {
 
       if (newQueue.length === 1) {
         await interaction.reply(
-          `${interaction.user.username} claimed ${
+          `<@${user.id}> claimed ${
             chamberName.charAt(0).toUpperCase() + chamberName.slice(1)
           } ${chamberNumber} on ${floor} for ${tickets} minutes. 
           \n ${
             interaction.user.username
           } you are ready to go! Enter the Magic Square!`
         );
-      } else {
+      }
+      if (newQueue.length > 1) {
+        let result = timeToEnter - 300000;
+
+        setTimeout(() => {
+          channel.send({
+            content: `<@${user.id}>, be ready in 5 minutes you are allowed to enter the Magic Square!`,
+            ephemeral: true,
+          });
+        }, result);
+
         await interaction.reply(
-          `${interaction.user.username} claimed ${
+          `<@${user.id}> claimed ${
             chamberName.charAt(0).toUpperCase() + chamberName.slice(1)
           } ${chamberNumber} on ${floor} for ${tickets} minutes. 
           \nYour turn is in ${minutesLeft} minutes, be ready!`
         );
-      }
-
-      if (newQueue.length > 1) {
-        const result = minutesLeft - 300000;
-        setTimeout(() => {
-          interaction.reply(
-            `${interaction.user.userName} You are allowed to enter in 5 minutes, be ready!`
-          );
-        }, result);
       }
     } catch (error) {
       await interaction.reply({
