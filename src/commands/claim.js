@@ -71,7 +71,7 @@ module.exports = {
 
       let startedAt = date;
       let endsAt = startedAt;
-      console.log("date", date);
+      let minutesLeft;
 
       if (newQueueDateCalc.length == 1) {
         const endsAt01 = queueDateCalc[0].endsAt;
@@ -82,12 +82,17 @@ module.exports = {
         const ticketsMap = newQueueDateCalc.map((player) => {
           return Number(player.spot.tickets);
         });
+
         const soma = ticketsMap.reduce((a, b) => a + b, 0);
         const position01 = date - queueDateCalc[0].startedAt;
-        console.log("position01", position01);
         const result = soma * 60000 - position01;
-        console.log("soma", result);
         startedAt = date + result;
+      }
+      if (newQueueDateCalc.length > 0) {
+        const timeToEnter = startedAt - date;
+        minuteTimeToEnter = timeToEnter / 60000;
+        const formattedMinute = minuteTimeToEnter.toString().slice(0, 3);
+        minutesLeft = formattedMinute;
       }
 
       if (tickets == "30") {
@@ -95,7 +100,6 @@ module.exports = {
       } else {
         endsAt = startedAt + 3600000;
       }
-
       const player = {
         userName: interaction.user.username,
         spot: {
@@ -110,16 +114,36 @@ module.exports = {
 
       let queue = JSON.parse(fs.readFileSync("./src/data/queue.json"));
       let newQueue = queue;
-      console.log("player", player);
       newQueue.push(player);
 
       fs.writeFileSync("./src/data/queue.json", JSON.stringify(newQueue));
 
-      await interaction.reply(
-        `${interaction.user.username} claimed ${
-          chamberName.charAt(0).toUpperCase() + chamberName.slice(1)
-        } ${chamberNumber} on ${floor} for ${tickets} minutes.`
-      );
+      if (newQueue.length === 1) {
+        await interaction.reply(
+          `${interaction.user.username} claimed ${
+            chamberName.charAt(0).toUpperCase() + chamberName.slice(1)
+          } ${chamberNumber} on ${floor} for ${tickets} minutes. 
+          \n ${
+            interaction.user.username
+          } you are ready to go! Enter the Magic Square!`
+        );
+      } else {
+        await interaction.reply(
+          `${interaction.user.username} claimed ${
+            chamberName.charAt(0).toUpperCase() + chamberName.slice(1)
+          } ${chamberNumber} on ${floor} for ${tickets} minutes. 
+          \nYour turn is in ${minutesLeft} minutes, be ready!`
+        );
+      }
+
+      if (newQueue.length > 1) {
+        const result = minutesLeft - 300000;
+        setTimeout(() => {
+          interaction.reply(
+            `${interaction.user.userName} You are allowed to enter in 5 minutes, be ready!`
+          );
+        }, result);
+      }
     } catch (error) {
       await interaction.reply({
         content: `There was an error while executing this command!\nError:${error.message}`,
