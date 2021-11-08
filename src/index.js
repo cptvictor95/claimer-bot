@@ -1,6 +1,8 @@
 const fs = require("fs");
 const { Client, Intents, Collection } = require("discord.js");
 const claim = require("./commands/claim");
+const { execute } = require("./commands/claim");
+const fiveMinutesMessage = require("./events/fiveMinutesMessage");
 
 const client = new Client({
   intents: [Intents.FLAGS.GUILDS],
@@ -42,17 +44,24 @@ for (const file of eventFiles) {
 
 client.login(`${token}`);
 
+let queue;
+let newQueue;
+
 client.on("ready", () => {
+  const guild = client.guilds.cache.get("903985002650411049");
+  const channel = guild.channels.cache.get("903985002650411052");
+
   setInterval(() => {
-    let queue = JSON.parse(fs.readFileSync("./src/data/queue.json"));
-    const newQueue = eval(queue);
+    queue = JSON.parse(fs.readFileSync("./src/data/queue.json"));
+    newQueue = eval(queue);
     const date = Date.now();
     if (newQueue.length === 0) return;
     if (newQueue[0].endsAt <= date) {
-      console.log("TESTE01");
       newQueue.shift();
-      console.log("QUEUE:", newQueue);
       fs.writeFileSync("./src/data/queue.json", JSON.stringify(newQueue));
+      channel.send(
+        `${newQueue[0].userName}, You are ready to go! Enter the magic square!`
+      );
     }
-  }, 200);
+  }, 100);
 });
