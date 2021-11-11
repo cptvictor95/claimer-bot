@@ -54,6 +54,7 @@ module.exports = {
       });
 
       await interaction.followUp({
+        ephemeral: true,
         content: `This is the actual queue of players in the Magic Square.\n${queue.items.map(
           (item, index) => {
             console.info("item", item.userName);
