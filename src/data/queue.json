@@ -1,35 +1,3 @@
 [
-  {
-    "userName": "Italin",
-    "spot": {
-      "floor": "1F",
-      "name": "Gold Chamber",
-      "number": "I",
-      "tickets": "30"
-    },
-    "startedAt": 1636642644379,
-    "endsAt": 1636644444379
-  },
-  {
-    "userName": "Italin",
-    "spot": {
-      "floor": "1F",
-      "name": "Gold Chamber",
-      "number": "I",
-      "tickets": "60"
-    },
-    "startedAt": 1636644444379,
-    "endsAt": 1636648044379
-  },
-  {
-    "userName": "Italin",
-    "spot": {
-      "floor": "1F",
-      "name": "Gold Chamber",
-      "number": "I",
-      "tickets": "30"
-    },
-    "startedAt": 1636648044379,
-    "endsAt": 1636649844379
-  }
+  
 ]
