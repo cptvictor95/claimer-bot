@@ -51,17 +51,17 @@ client.on("ready", () => {
   const guild = client.guilds.cache.get("903985002650411049");
   const channel = guild.channels.cache.get("903985002650411052");
 
-  setInterval(() => {
-    queue = JSON.parse(fs.readFileSync("./src/data/queue.json"));
-    newQueue = eval(queue);
-    const date = Date.now();
-    if (newQueue.length === 0) return;
-    if (newQueue[0].endsAt <= date) {
-      newQueue.shift();
-      fs.writeFileSync("./src/data/queue.json", JSON.stringify(newQueue));
-      channel.send(
-        `${newQueue[0].userName}, You are ready to go! Enter the magic square!`
-      );
-    }
-  }, 100);
+  // setInterval(() => {
+  //   queue = JSON.parse(fs.readFileSync("./src/data/queue.json"));
+  //   newQueue = eval(queue);
+  //   const date = Date.now();
+  //   if (newQueue.length === 0) return;
+  //   if (newQueue[0].endsAt <= date) {
+  //     newQueue.shift();
+  //     fs.writeFileSync("./src/data/queue.json", JSON.stringify(newQueue));
+  //     channel.send(
+  //       `${newQueue[0].userName}, You are ready to go! Enter the magic square!`
+  //     );
+  //   }
+  // }, 100);
 });

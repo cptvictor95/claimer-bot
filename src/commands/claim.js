@@ -32,20 +32,20 @@ module.exports = {
           "Magic Square Chamber Name (Gold/White Silver/Experience/Training/Magic Stone)"
         )
         .setRequired(true)
-        .addChoice("Gold Chamber", "Gold Chamber")
-        .addChoice("White Silver Chamber", "White Silver Chamber")
-        .addChoice("Experience Chamber", "Experience Chamber")
-        .addChoice("Training Chamber", "Training Chamber")
-        .addChoice("Magic Stone Chamber", "Magic Stone Chamber")
+        .addChoice("Gold Chamber", "gold")
+        .addChoice("White Silver Chamber", "white-silver")
+        .addChoice("Experience Chamber", "experience")
+        .addChoice("Training Chamber", "training")
+        .addChoice("Magic Stone Chamber", "magic-stone")
     )
     .addStringOption((option) =>
       option
         .setName("chambernumber")
         .setDescription("Magic Square Chamber Number (I/II/III)")
         .setRequired(true)
-        .addChoice("Chamber I", "I")
-        .addChoice("Chamber II", "II")
-        .addChoice("Chamber III", "III")
+        .addChoice("Chamber I", "1")
+        .addChoice("Chamber II", "2")
+        .addChoice("Chamber III", "3")
     )
     .addStringOption((option) =>
       option
@@ -65,9 +65,14 @@ module.exports = {
       const tickets = interaction.options.getString("tickets");
 
       const date = Date.now();
-      // const formattedDate = new Date(date).toISOString().slice(11, 19);
 
-      let queueDateCalc = JSON.parse(fs.readFileSync("./src/data/queue.json"));
+      const formattedChamber = `${chamberName}-${chamberNumber}.json`;
+      let queue;
+      queue = JSON.parse(
+        fs.readFileSync(`./src/data/${floor}/${formattedChamber}`)
+      );
+
+      let queueDateCalc = queue;
       let newQueueDateCalc = eval(queueDateCalc);
 
       let startedAt = date;
@@ -110,6 +115,7 @@ module.exports = {
       } else {
         endsAt = startedAt + 3600000;
       }
+
       const player = {
         userName: interaction.user.username,
         spot: {
@@ -122,13 +128,13 @@ module.exports = {
         endsAt: endsAt,
       };
 
-      let queue = JSON.parse(fs.readFileSync("./src/data/queue.json"));
-      let newQueue = queue;
-      newQueue.push(player);
+      const newQueue = queue.push(player);
+      fs.writeFileSync(
+        `./src/data/${floor}/${formattedChamber}`,
+        JSON.stringify(queue)
+      );
 
-      fs.writeFileSync("./src/data/queue.json", JSON.stringify(newQueue));
-
-      if (newQueue.length === 1) {
+      if (queue.length === 1) {
         await interaction.reply(
           `<@${user.id}> claimed ${
             chamberName.charAt(0).toUpperCase() + chamberName.slice(1)
@@ -138,7 +144,7 @@ module.exports = {
           } you are ready to go! Enter the Magic Square!`
         );
       }
-      if (newQueue.length > 1) {
+      if (queue.length > 1) {
         let result = timeToEnter - 300000;
 
         setTimeout(() => {
