@@ -118,6 +118,7 @@ module.exports = {
 
       const player = {
         userName: interaction.user.username,
+        id: user.id,
         spot: {
           floor: floor,
           name: chamberName,
@@ -139,9 +140,9 @@ module.exports = {
           `<@${user.id}> claimed ${
             chamberName.charAt(0).toUpperCase() + chamberName.slice(1)
           } ${chamberNumber} on ${floor} for ${tickets} minutes. 
-          \n ${
-            interaction.user.username
-          } you are ready to go! Enter the Magic Square!`
+            \n ${
+              interaction.user.username
+            } you are ready to go! Enter the Magic Square!`
         );
       }
       if (queue.length > 1) {
@@ -158,9 +159,27 @@ module.exports = {
           `<@${user.id}> claimed ${
             chamberName.charAt(0).toUpperCase() + chamberName.slice(1)
           } ${chamberNumber} on ${floor} for ${tickets} minutes. 
-          \nYour turn is in ${minutesLeft} minutes, be ready!`
+              \nYour turn is in ${minutesLeft} minutes, be ready!`
         );
       }
+      const queueExit = endsAt - date;
+      setTimeout(() => {
+        let timeoutQueue = JSON.parse(
+          fs.readFileSync(`./src/data/${floor}/${formattedChamber}`)
+        );
+        eval(timeoutQueue);
+        timeoutQueue.shift();
+        fs.writeFileSync(
+          `./src/data/${floor}/${formattedChamber}`,
+          JSON.stringify(timeoutQueue)
+        );
+        if (timeoutQueue.length === 0) return;
+        else {
+          channel.send(
+            `<@${timeoutQueue[0].id}>, You are ready to go! Enter the magic square!`
+          );
+        }
+      }, queueExit);
     } catch (error) {
       await interaction.reply({
         content: `There was an error while executing this command!\nError:${error.message}`,
