@@ -117,6 +117,13 @@ module.exports = {
         uiChamberNumber = "III";
       }
       queue.items = queueFile;
+      if (queueFile.length == 0) {
+        await interaction.reply({
+          ephemeral: true,
+          content: "There is no one on this queue",
+        });
+        return;
+      }
       await interaction.reply({
         content: `${queue.items.map((item, index) => {
           if (item.userName == interaction.user.username) {
@@ -124,13 +131,6 @@ module.exports = {
           }
         })}`,
       });
-
-      if (queueFile.length === 0) {
-        await interaction.followUp({
-          ephemeral: true,
-          content: "There is no one on this queue",
-        });
-      }
       await interaction.followUp({
         ephemeral: true,
         content: `This is the actual queue of players in the Magic Square. \n
