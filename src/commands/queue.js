@@ -39,30 +39,112 @@ module.exports = {
     .setName("queue")
     .setDescription(
       "Lists the queue of players in each Chamber of the Magic Square"
+    )
+    .addStringOption((option) =>
+      option
+        .setName("floor")
+        .setDescription("Magic Square Floor Number (1F-6F)")
+        .setRequired(true)
+        .addChoice("1F", "1F")
+        .addChoice("2F", "2F")
+        .addChoice("3F", "3F")
+        .addChoice("4F", "4F")
+        .addChoice("5F", "5F")
+        .addChoice("6F", "6F")
+    )
+    .addStringOption((option) =>
+      option
+        .setName("chambername")
+        .setDescription(
+          "Magic Square Chamber Name (Gold/White Silver/Experience/Training/Magic Stone)"
+        )
+        .setRequired(true)
+        .addChoice("Gold Chamber", "gold")
+        .addChoice("White Silver Chamber", "white-silver")
+        .addChoice("Experience Chamber", "experience")
+        .addChoice("Training Chamber", "training")
+        .addChoice("Magic Stone Chamber", "magic-stone")
+    )
+    .addStringOption((option) =>
+      option
+        .setName("chambernumber")
+        .setDescription("Magic Square Chamber Number (I/II/III)")
+        .setRequired(true)
+        .addChoice("Chamber I", "1")
+        .addChoice("Chamber II", "2")
+        .addChoice("Chamber III", "3")
     ),
+
   async execute(interaction) {
     try {
+      const floor = interaction.options.getString("floor");
+      const chamberName = interaction.options.getString("chambername");
+      const chamberNumber = interaction.options.getString("chambernumber");
+      const formattedChamber = `${chamberName}-${chamberNumber}.json`;
       const queue = new Queue();
-      let queueFile = JSON.parse(fs.readFileSync("./src/data/queue.json"));
+      const queueFile = JSON.parse(
+        fs.readFileSync(`./src/data/${floor}/${formattedChamber}`)
+      );
+      let uiChamberName;
+      let uiChamberNumber;
+
+      switch (chamberName) {
+        case "gold":
+          uiChamberName = "Gold Chamber";
+          break;
+        case "experience":
+          uiChamberName = "Experience Chamber";
+          break;
+        case "training":
+          uiChamberName = "Training Chamber";
+          break;
+        case "white-silver":
+          uiChamberName = "White Silver Chamber";
+          break;
+        case "magic-stone":
+          uiChamberName = "Magic Stone Chamber";
+          break;
+        default:
+          break;
+      }
+      if (chamberNumber === "1") {
+        uiChamberNumber = "I";
+      }
+      if (chamberNumber === "2") {
+        uiChamberNumber = "II";
+      }
+      if (chamberNumber === "3") {
+        uiChamberNumber = "III";
+      }
       queue.items = queueFile;
       await interaction.reply({
         content: `${queue.items.map((item, index) => {
           if (item.userName == interaction.user.username) {
-            return `${item.userName}'s position is ${index + 1}`;
+            return `${item.userName}'s position on queue is ${index + 1}`;
           }
         })}`,
       });
 
+      if (queueFile.length === 0) {
+        await interaction.followUp({
+          ephemeral: true,
+          content: "There is no one on this queue",
+        });
+      }
       await interaction.followUp({
         ephemeral: true,
-        content: `This is the actual queue of players in the Magic Square.\n${queue.items.map(
-          (item, index) => {
-            console.info("item", item.userName);
-            return `\n${index + 1}. ${item.userName} is on ${item.spot.name} ${
-              item.spot.number
-            } on floor ${item.spot.floor}`;
-          }
-        )}`,
+        content: `This is the actual queue of players in the Magic Square. \n
+1.  :video_game: ${
+          queue.items[0].userName
+        } is on: ${uiChamberName} ${uiChamberNumber}. ${
+          queue.items[0].spot.floor
+        },${queue.items.slice(1).map((item, index) => {
+          return `\n${index + 2}. :stopwatch: ${
+            item.userName
+          } is waiting his turn on queue: ${uiChamberName} ${uiChamberNumber}. ${
+            item.spot.floor
+          }`;
+        })}`,
       });
     } catch (error) {
       await interaction.reply({

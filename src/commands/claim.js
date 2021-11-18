@@ -137,10 +137,10 @@ module.exports = {
 
       if (queue.length === 1) {
         await interaction.reply(
-          `<@${user.id}> claimed ${
+          `:white_check_mark: <@${user.id}> claimed ${
             chamberName.charAt(0).toUpperCase() + chamberName.slice(1)
-          } ${chamberNumber} on ${floor} for ${tickets} minutes. 
-            \n ${
+          } ${chamberNumber} on ${floor} for ${tickets} minutes   
+            \n :ballot_box_with_check: ${
               interaction.user.username
             } you are ready to go! Enter the Magic Square!`
         );
@@ -150,16 +150,16 @@ module.exports = {
 
         setTimeout(() => {
           channel.send({
-            content: `<@${user.id}>, be ready in 5 minutes you are allowed to enter the Magic Square!`,
+            content: `:rotating_light: <@${user.id}>, be ready in 5 minutes you are allowed to enter the Magic Square!`,
             ephemeral: true,
           });
         }, result);
 
         await interaction.reply(
-          `<@${user.id}> claimed ${
+          `:white_check_mark: <@${user.id}> claimed ${
             chamberName.charAt(0).toUpperCase() + chamberName.slice(1)
-          } ${chamberNumber} on ${floor} for ${tickets} minutes. 
-              \nYour turn is in ${minutesLeft} minutes, be ready!`
+          } ${chamberNumber} on ${floor} for ${tickets} minutes   
+              \n :stopwatch: Your turn is in ${minutesLeft} minutes, be ready!`
         );
       }
       const queueExit = endsAt - date;
@@ -176,7 +176,7 @@ module.exports = {
         if (timeoutQueue.length === 0) return;
         else {
           channel.send(
-            `<@${timeoutQueue[0].id}>, You are ready to go! Enter the magic square!`
+            `:ballot_box_with_check: <@${timeoutQueue[0].id}>, You are ready to go! Enter the magic square!`
           );
         }
       }, queueExit);
