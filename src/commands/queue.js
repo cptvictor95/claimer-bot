@@ -134,10 +134,12 @@ module.exports = {
       await interaction.followUp({
         ephemeral: true,
         content: `This is the actual queue of players in the Magic Square. \n
-1.  ${queue.items[0].userName} is on: ${uiChamberName} ${uiChamberNumber}. ${
+1.  :video_game: ${
+          queue.items[0].userName
+        } is on: ${uiChamberName} ${uiChamberNumber}. ${
           queue.items[0].spot.floor
         },${queue.items.slice(1).map((item, index) => {
-          return `\n${index + 2}. ${
+          return `\n${index + 2}. :stopwatch: ${
             item.userName
           } is waiting his turn on queue: ${uiChamberName} ${uiChamberNumber}. ${
             item.spot.floor
