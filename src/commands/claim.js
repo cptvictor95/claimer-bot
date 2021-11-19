@@ -1,5 +1,5 @@
-const { SlashCommandBuilder } = require("@discordjs/builders");
 const { Client } = require("discord.js");
+const { SlashCommandBuilder } = require("@discordjs/builders");
 const fs = require("fs");
 
 /** To Do
@@ -128,6 +128,19 @@ module.exports = {
         startedAt: startedAt,
         endsAt: endsAt,
       };
+
+      const playersOnQueue = queue.map((users) => {
+        const result = users.id;
+        return result;
+      });
+
+      const checkPlayer = playersOnQueue.includes(`${user.id}`);
+      if (checkPlayer === true) {
+        interaction.reply(
+          `:no_entry_sign: <@${user.id}> You are in this queue already, players can not queue more than 1 time per queue`
+        );
+        return;
+      }
 
       const newQueue = queue.push(player);
       fs.writeFileSync(
