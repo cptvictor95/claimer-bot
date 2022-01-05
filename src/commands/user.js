@@ -4,7 +4,7 @@ module.exports = {
   data: new SlashCommandBuilder().setName("user").setDescription("User infos."),
   async execute(interaction) {
     await interaction.reply(
-      `Hello ${interaction.user.username}!\nYour tag: ${interaction.user.tag}\nYour id: ${interaction.user.id}`
+      `Olá, ${interaction.user.username}!\nSua tag é: ${interaction.user.tag}\nSeu id é: ${interaction.user.id}`
     );
   },
 };

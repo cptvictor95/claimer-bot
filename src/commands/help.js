@@ -3,7 +3,9 @@ const { SlashCommandBuilder } = require("@discordjs/builders");
 module.exports = {
   data: new SlashCommandBuilder()
     .setName("help")
-    .setDescription("Shows a list with all the commands and descriptions."),
+    .setDescription(
+      "Mostra a lista de comandos utilizaveis, suas funcionalidades e como utilizar"
+    ),
   async execute(interaction) {
     try {
       const commands = interaction.client.commands;
@@ -14,7 +16,7 @@ module.exports = {
         return infos;
       });
 
-      await interaction.reply(`Full list of commands: \n${commandList}`);
+      await interaction.reply(`Lista completa de comandos: \n${commandList}`);
     } catch (error) {
       await interaction.reply({
         content: "There was an error while executing this command!",

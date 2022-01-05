@@ -5,7 +5,7 @@ const { execute } = require("./commands/claim");
 const fiveMinutesMessage = require("./events/fiveMinutesMessage");
 
 const client = new Client({
-  intents: [Intents.FLAGS.GUILDS],
+  intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_MESSAGES],
 });
 
 // console.clear();
