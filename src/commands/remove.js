@@ -61,9 +61,9 @@ module.exports = {
       const placeOnQueue = queueMap.indexOf(`${user.id}`);
 
       if (placeOnQueue === -1) {
-        interaction.reply({
+        await interaction.reply({
           ephemeral: true,
-          content: `:rotating_light: <@${user.id}> You are not on that queue, certify that you search for the correct queue`,
+          content: `:rotating_light: <@${user.id}> Você não esta em nenhuma fila, certifique-se de que esta em alguma fila antes de utilizar o comando`,
         });
       }
       const newQueue = queue.splice(placeOnQueue, 1);
@@ -77,7 +77,7 @@ module.exports = {
 
       await interaction.reply({
         ephemeral: true,
-        content: `:white_check_mark: <@${user.id}> you have been removed from the queue`,
+        content: `:white_check_mark: <@${user.id}> você foi removido da fila com sucesso`,
       });
     } catch (error) {
       await interaction.reply({

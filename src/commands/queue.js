@@ -38,7 +38,7 @@ module.exports = {
   data: new SlashCommandBuilder()
     .setName("queue")
     .setDescription(
-      "Lists the queue of players in each Chamber of the Magic Square"
+      "Mostra a fila de jogadores requisitada por qual andar, nome da chamber e numero da chamber"
     )
     .addStringOption((option) =>
       option
@@ -120,20 +120,20 @@ module.exports = {
       if (queueFile.length == 0) {
         await interaction.reply({
           ephemeral: true,
-          content: "There is no one on this queue",
+          content: ":loudspeaker:  Não há ninguem nesta fila",
         });
         return;
       }
       await interaction.reply({
         content: `${queue.items.map((item, index) => {
           if (item.userName == interaction.user.username) {
-            return `${item.userName}'s position on queue is ${index + 1}`;
+            return `A posição de ${item.userName} na fila é ${index + 1}`;
           }
         })}`,
       });
       await interaction.followUp({
         ephemeral: true,
-        content: `This is the actual queue of players in the Magic Square. \n
+        content: `Esse é a lista atualizada de jogadores na fila. \n
 1.  :video_game: ${
           queue.items[0].userName
         } is on: ${uiChamberName} ${uiChamberNumber}. ${
@@ -141,7 +141,7 @@ module.exports = {
         },${queue.items.slice(1).map((item, index) => {
           return `\n${index + 2}. :stopwatch: ${
             item.userName
-          } is waiting his turn on queue: ${uiChamberName} ${uiChamberNumber}. ${
+          } esta esperando sua vez na fila: ${uiChamberName} ${uiChamberNumber}. ${
             item.spot.floor
           }`;
         })}`,

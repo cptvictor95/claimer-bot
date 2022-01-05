@@ -1,4 +1,5 @@
 const { Client } = require("discord.js");
+const { Permissions } = require("discord.js");
 const { SlashCommandBuilder } = require("@discordjs/builders");
 const fs = require("fs");
 
@@ -11,7 +12,7 @@ module.exports = {
   data: new SlashCommandBuilder()
     .setName("claim")
     .setDescription(
-      "Claim magic square spot based on Floor, Chamber Name and Number and Tickets used (2 tickets maximum)"
+      "Reivindica uma sala na Magic Square baseado no andar, nome e numero da chamber e tickets"
     )
     .addStringOption((option) =>
       option
@@ -33,9 +34,7 @@ module.exports = {
         )
         .setRequired(true)
         .addChoice("Gold Chamber", "gold")
-        .addChoice("White Silver Chamber", "white-silver")
         .addChoice("Experience Chamber", "experience")
-        .addChoice("Training Chamber", "training")
         .addChoice("Magic Stone Chamber", "magic-stone")
     )
     .addStringOption((option) =>
@@ -54,6 +53,20 @@ module.exports = {
         .setRequired(true)
         .addChoice("1", "30")
         .addChoice("2", "60")
+        .addChoice("3", "90")
+        .addChoice("4", "120")
+        .addChoice("5", "150")
+        .addChoice("6", "180")
+        .addChoice("7", "210")
+        .addChoice("8", "240")
+        .addChoice("9", "270")
+        .addChoice("10", "300")
+        .addChoice("11", "330")
+        .addChoice("12", "360")
+        .addChoice("13", "390")
+        .addChoice("14", "420")
+        .addChoice("15", "450")
+        .addChoice("16", "480")
     ),
   async execute(interaction) {
     try {
@@ -64,14 +77,17 @@ module.exports = {
       const chamberNumber = interaction.options.getString("chambernumber");
       const tickets = interaction.options.getString("tickets");
 
-      const date = Date.now();
+      const client = interaction.client;
+      const guild = client.guilds.cache.get("903985002650411049");
+      const channel = guild.channels.cache.get("903985002650411052");
+      const member = interaction.member;
 
+      const date = Date.now();
       const formattedChamber = `${chamberName}-${chamberNumber}.json`;
       let queue;
       queue = JSON.parse(
         fs.readFileSync(`./src/data/${floor}/${formattedChamber}`)
       );
-
       let queueDateCalc = queue;
       let newQueueDateCalc = eval(queueDateCalc);
 
@@ -80,41 +96,133 @@ module.exports = {
       let timeToEnter;
       let minutesLeft;
 
-      const client = interaction.client;
-      const guild = client.guilds.cache.get("903985002650411049");
-      const channel = guild.channels.cache.get("903985002650411052");
-
       const user = client.users.cache.find(
         (u) => u.tag === `${interaction.user.tag}`
       );
+
+      if (
+        tickets > 60 &&
+        !member.roles.cache.some((role) => role.name === "75+")
+      ) {
+        await channel.send(
+          `:no_entry_sign: <@${user.id}> você não é level 75+, portanto so pode utilizar 2 tickets`
+        );
+        return;
+      } else if (
+        tickets > 300 &&
+        !member.roles.cache.some((role) => role.name === "81+")
+      ) {
+        await channel.send(
+          `:no_entry_sign: <@${user.id}> você não é level 81+, portanto so pode utilizar 10 tickets`
+        );
+        return;
+      }
 
       if (newQueueDateCalc.length == 1) {
         const endsAt01 = queueDateCalc[0].endsAt;
         startedAt = endsAt01;
       }
 
-      if (newQueueDateCalc.length > 1) {
-        const ticketsMap = newQueueDateCalc.map((player) => {
-          return Number(player.spot.tickets);
-        });
-
-        const soma = ticketsMap.reduce((a, b) => a + b, 0);
-        const position01 = date - queueDateCalc[0].startedAt;
-        const result = soma * 60000 - position01;
-        startedAt = date + result;
+      if (newQueueDateCalc.length >= 2) {
+        await interaction.reply(
+          `:no_entry_sign: <@${user.id}>, essa fila esta cheia!`
+        );
+        return;
       }
-      if (newQueueDateCalc.length > 0) {
+      const checkUserRole = () => {
+        if (queue.length === 0) return;
+        if (date <= queue[0].endsAt - 1500000)
+          return channel.send("Cannot Claim");
+        const userRoles = member.roles.cache.map((role) => role.name);
+        const seventyFive = userRoles.includes("75+");
+        const eightyOne = userRoles.includes("81+");
+        const eightyFive = userRoles.includes("85+");
+        const hasNoRole = !seventyFive && !eightyOne && !eightyFive;
+        if (hasNoRole) {
+          channel.send("Cannot Claim");
+          return;
+        }
+        if (date >= queue[0].endsAt - 300000 && seventyFive) {
+          console.log("seventyFive");
+          return true;
+        }
+
+        if (date >= queue[0].endsAt - 900000 && eightyOne) {
+          console.log("eightyOne");
+          return true;
+        }
+        if (date >= queue[0].endsAt - 1500000 && eightyFive) {
+          console.log("eightyFive");
+          return true;
+        }
+      };
+      const canClaim = checkUserRole();
+      if (!canClaim) return;
+      if (newQueueDateCalc.length >= 0) {
         timeToEnter = startedAt - date;
         minuteTimeToEnter = timeToEnter / 60000;
         const formattedMinute = minuteTimeToEnter.toString().slice(0, 3);
         minutesLeft = formattedMinute;
       }
 
-      if (tickets == "30") {
-        endsAt = startedAt + 1800000;
-      } else {
-        endsAt = startedAt + 3600000;
-      }
+      const calcEndTime = (tickets) => {
+        switch (tickets) {
+          case "30":
+            endsAt = startedAt + 1800000;
+            break;
+          case "60":
+            endsAt = startedAt + 3600000;
+            break;
+          case "90":
+            endsAt = startedAt + 5400000;
+            break;
+          case "120":
+            endsAt = startedAt + 7200000;
+            break;
+          case "150":
+            endsAt = startedAt + 9000000;
+            break;
+          case "180":
+            endsAt = startedAt + 10800000;
+            break;
+          case "210":
+            endsAt = startedAt + 12600000;
+            break;
+          case "240":
+            endsAt = startedAt + 14400000;
+            break;
+          case "270":
+            endsAt = startedAt + 16200000;
+            break;
+          case "300":
+            endsAt = startedAt + 18000000;
+            break;
+          case "330":
+            endsAt = startedAt + 19800000;
+            break;
+          case "360":
+            endsAt = startedAt + 21600000;
+            break;
+          case "390":
+            endsAt = startedAt + 23400000;
+            break;
+          case "420":
+            endsAt = startedAt + 25200000;
+            break;
+          case "450":
+            endsAt = startedAt + 27000000;
+            break;
+          case "480":
+            endsAt = startedAt + 28800000;
+            break;
+
+          default:
+            break;
+        }
+      };
+      calcEndTime(tickets);
+
+      // endsAt = startedAt + 1440000;
 
       const player = {
         userName: interaction.user.username,
@@ -129,17 +237,42 @@ module.exports = {
         endsAt: endsAt,
       };
 
-      const playersOnQueue = queue.map((users) => {
-        const result = users.id;
-        return result;
-      });
-
-      const checkPlayer = playersOnQueue.includes(`${user.id}`);
-      if (checkPlayer === true) {
-        interaction.reply(
-          `:no_entry_sign: <@${user.id}> You are in this queue already, players can not queue more than 1 time per queue`
-        );
-        return;
+      if (queue.length == 1) {
+        if (
+          (date >= queue[0].endsAt - 1800000 &&
+            date >= queue[0].endsAt - 1500000) ||
+          date >= queue[0].endsAt - 1800000
+        ) {
+          await interaction.reply(
+            `:no_entry_sign: <@${user.id}> Você não pode claimar 30 minutos antes do proximo na fila`
+          );
+          return;
+        }
+        if (
+          date >= queue[0].endsAt - 300000 &&
+          !member.roles.cache.some((role) => role.name === "75+")
+        ) {
+          await interaction.reply(
+            `:no_entry_sign: <@${user.id}> Você não pode claimar 5 minutos antes do proximo pois não é 75+`
+          );
+          return;
+        } else if (
+          date >= queue[0].endsAt - 900000 &&
+          !member.roles.cache.some((role) => role.name === "81+")
+        ) {
+          await interaction.reply(
+            `:no_entry_sign: <@${user.id}> Você não pode claimar 15 minutos antes do proximo pois não é 81+`
+          );
+          return;
+        } else if (
+          date >= queue[0].endsAt - 1500000 &&
+          !member.roles.cache.some((role) => role.name === "85+")
+        ) {
+          await interaction.reply(
+            `:no_entry_sign: <@${user.id}> Você não pode claimar 25 minutos antes do proximo pois não é 85+`
+          );
+          return;
+        }
       }
 
       const newQueue = queue.push(player);
@@ -147,33 +280,31 @@ module.exports = {
         `./src/data/${floor}/${formattedChamber}`,
         JSON.stringify(queue)
       );
-
       if (queue.length === 1) {
         await interaction.reply(
-          `:white_check_mark: <@${user.id}> claimed ${
+          `:white_check_mark: <@${user.id}> reivindicou ${
             chamberName.charAt(0).toUpperCase() + chamberName.slice(1)
-          } ${chamberNumber} on ${floor} for ${tickets} minutes   
+          } ${chamberNumber} no ${floor} por ${tickets} minutos   
             \n :ballot_box_with_check: ${
               interaction.user.username
-            } you are ready to go! Enter the Magic Square!`
+            } você esta liberado! Entre na Magic Square!`
         );
       }
       if (queue.length > 1) {
         let result = timeToEnter - 300000;
+        await interaction.reply(
+          `:white_check_mark: <@${user.id}> reivindicou ${
+            chamberName.charAt(0).toUpperCase() + chamberName.slice(1)
+          } ${chamberNumber} no ${floor} por ${tickets} minutos   
+              \n :stopwatch: Sua vez é em ${minutesLeft} minutos, esteja pronto!`
+        );
 
         setTimeout(() => {
           channel.send({
-            content: `:rotating_light: <@${user.id}>, be ready in 5 minutes you are allowed to enter the Magic Square!`,
+            content: `:rotating_light: <@${user.id}>, esteja pronto! Em 5 minutos você estara liberado para entrar na Magic Square!`,
             ephemeral: true,
           });
         }, result);
-
-        await interaction.reply(
-          `:white_check_mark: <@${user.id}> claimed ${
-            chamberName.charAt(0).toUpperCase() + chamberName.slice(1)
-          } ${chamberNumber} on ${floor} for ${tickets} minutes   
-              \n :stopwatch: Your turn is in ${minutesLeft} minutes, be ready!`
-        );
       }
       const queueExit = endsAt - date;
       setTimeout(() => {
@@ -189,7 +320,7 @@ module.exports = {
         if (timeoutQueue.length === 0) return;
         else {
           channel.send(
-            `:ballot_box_with_check: <@${timeoutQueue[0].id}>, You are ready to go! Enter the magic square!`
+            `:ballot_box_with_check: <@${timeoutQueue[0].id}>, Você esta liberado! Entre na Magic Square!`
           );
         }
       }, queueExit);
