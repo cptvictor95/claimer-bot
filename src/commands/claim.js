@@ -99,21 +99,21 @@ module.exports = {
       const user = client.users.cache.find(
         (u) => u.tag === `${interaction.user.tag}`
       );
-
-      if (
-        tickets > 60 &&
-        !member.roles.cache.some((role) => role.name === "75+")
-      ) {
-        await channel.send(
-          `:no_entry_sign: <@${user.id}> você não é level 75+, portanto so pode utilizar 2 tickets`
+      const rolesTicketsCalc =
+        !member.roles.cache.some((role) => role.name === "81+") ||
+        !member.roles.cache.some((role) => role.name === "85+");
+      console.log(rolesTicketsCalc);
+      if (Number(tickets) > 60 && !rolesTicketsCalc) {
+        await interaction.reply(
+          `:no_entry_sign: <@${user.id}> você não é level 81+, portanto so pode utilizar 2 tickets`
         );
         return;
       } else if (
-        tickets > 300 &&
-        !member.roles.cache.some((role) => role.name === "81+")
+        Number(tickets) > 300 &&
+        !member.roles.cache.some((role) => role.name === "85+")
       ) {
-        await channel.send(
-          `:no_entry_sign: <@${user.id}> você não é level 81+, portanto so pode utilizar 10 tickets`
+        await interaction.reply(
+          `:no_entry_sign: <@${user.id}> você não é level 85+, portanto so pode utilizar 10 tickets`
         );
         return;
       }
@@ -129,18 +129,24 @@ module.exports = {
         );
         return;
       }
-      const checkUserRole = () => {
-        if (queue.length === 0) return;
-        if (date <= queue[0].endsAt - 1500000)
-          return channel.send("Cannot Claim");
+      const checkUserRole = async () => {
+        if (queue.length === 0) return true;
+        if (date <= queue[0].endsAt - 1500000) {
+          await interaction.reply(
+            `:no_entry_sign: <@${user.id}> Você não pode claimar 30 minutos antes do proximo na fila`
+          );
+          return false;
+        }
         const userRoles = member.roles.cache.map((role) => role.name);
         const seventyFive = userRoles.includes("75+");
         const eightyOne = userRoles.includes("81+");
         const eightyFive = userRoles.includes("85+");
         const hasNoRole = !seventyFive && !eightyOne && !eightyFive;
         if (hasNoRole) {
-          channel.send("Cannot Claim");
-          return;
+          await interaction.reply(
+            `:no_entry_sign: <@${user.id}> Você não possui nenhum cargo, portanto não pode claimar quando outro estiver na fila`
+          );
+          return false;
         }
         if (date >= queue[0].endsAt - 300000 && seventyFive) {
           console.log("seventyFive");
@@ -156,7 +162,8 @@ module.exports = {
           return true;
         }
       };
-      const canClaim = checkUserRole();
+      const canClaim = await checkUserRole();
+      console.log(canClaim);
       if (!canClaim) return;
       if (newQueueDateCalc.length >= 0) {
         timeToEnter = startedAt - date;
@@ -222,7 +229,7 @@ module.exports = {
       };
       calcEndTime(tickets);
 
-      // endsAt = startedAt + 1440000;
+      endsAt = startedAt + 420000;
 
       const player = {
         userName: interaction.user.username,
@@ -236,44 +243,6 @@ module.exports = {
         startedAt: startedAt,
         endsAt: endsAt,
       };
-
-      if (queue.length == 1) {
-        if (
-          (date >= queue[0].endsAt - 1800000 &&
-            date >= queue[0].endsAt - 1500000) ||
-          date >= queue[0].endsAt - 1800000
-        ) {
-          await interaction.reply(
-            `:no_entry_sign: <@${user.id}> Você não pode claimar 30 minutos antes do proximo na fila`
-          );
-          return;
-        }
-        if (
-          date >= queue[0].endsAt - 300000 &&
-          !member.roles.cache.some((role) => role.name === "75+")
-        ) {
-          await interaction.reply(
-            `:no_entry_sign: <@${user.id}> Você não pode claimar 5 minutos antes do proximo pois não é 75+`
-          );
-          return;
-        } else if (
-          date >= queue[0].endsAt - 900000 &&
-          !member.roles.cache.some((role) => role.name === "81+")
-        ) {
-          await interaction.reply(
-            `:no_entry_sign: <@${user.id}> Você não pode claimar 15 minutos antes do proximo pois não é 81+`
-          );
-          return;
-        } else if (
-          date >= queue[0].endsAt - 1500000 &&
-          !member.roles.cache.some((role) => role.name === "85+")
-        ) {
-          await interaction.reply(
-            `:no_entry_sign: <@${user.id}> Você não pode claimar 25 minutos antes do proximo pois não é 85+`
-          );
-          return;
-        }
-      }
 
       const newQueue = queue.push(player);
       fs.writeFileSync(
