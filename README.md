@@ -23,6 +23,9 @@ that the bot receives and send infos.
 - /claim
 --Claim command puts the user on the queue, select infos like what floor and chamber you want to queue for and you are in.
 
+- /remove
+--Remove command removes the user from the queue that he specified 
+
 ## Usage instructions
 
 Create a .env file with the following vars
