@@ -1,11 +1,9 @@
-const { Client } = require("discord.js");
-const { Permissions } = require("discord.js");
 const { SlashCommandBuilder } = require("@discordjs/builders");
 const fs = require("fs");
 
-/** To Do
- * [x] Add more than 1 user to queue array
- * [] Add startedAt(UTC - Hora, Minuto, segundo || msegundo) Property to queue player object
+/** TO-DO
+ * [] DELETE EPHEMERAL MESSAGES 3 MINUTES AFTER SENDING IT
+ * [] REFACTOR UTILITY & VALIDATION FUNCTIONS OUT OF THE COMMAND FILE
  */
 
 module.exports = {
@@ -88,8 +86,7 @@ module.exports = {
       queue = JSON.parse(
         fs.readFileSync(`./src/data/${floor}/${formattedChamber}`)
       );
-      let queueDateCalc = queue;
-      let newQueueDateCalc = eval(queueDateCalc);
+      let queueDateCalc = eval(queue);
 
       let startedAt = date;
       let endsAt = startedAt;
@@ -102,38 +99,43 @@ module.exports = {
       const rolesTicketsCalc =
         !member.roles.cache.some((role) => role.name === "81+") ||
         !member.roles.cache.some((role) => role.name === "85+");
-      console.log(rolesTicketsCalc);
+
       if (Number(tickets) > 60 && !rolesTicketsCalc) {
-        await interaction.reply(
-          `:no_entry_sign: <@${user.id}> você não é level 81+, portanto so pode utilizar 2 tickets`
-        );
+        await interaction.reply({
+          content: `\n:no_entry_sign: <@${user.id}> você pode usar no máximo 2 tickets. :no_entry_sign:`,
+          ephemeral: true,
+        });
+
         return;
       } else if (
         Number(tickets) > 300 &&
         !member.roles.cache.some((role) => role.name === "85+")
       ) {
-        await interaction.reply(
-          `:no_entry_sign: <@${user.id}> você não é level 85+, portanto so pode utilizar 10 tickets`
-        );
+        await interaction.reply({
+          content: `\n:no_entry_sign: <@${user.id}> você pode usar no máximo 10 tickets. :no_entry_sign:`,
+          ephemeral: true,
+        });
         return;
       }
 
-      if (newQueueDateCalc.length == 1) {
+      if (queueDateCalc.length == 1) {
         const endsAt01 = queueDateCalc[0].endsAt;
         startedAt = endsAt01;
       }
 
-      if (newQueueDateCalc.length >= 2) {
-        await interaction.reply(
-          `:no_entry_sign: <@${user.id}>, essa fila esta cheia!`
-        );
+      if (queueDateCalc.length >= 2) {
+        await interaction.reply({
+          content: `\n:no_entry_sign: <@${user.id}> essa fila está cheia! :no_entry_sign:`,
+          ephemeral: true,
+        });
         return;
       }
+
       const checkUserRole = async () => {
         if (queue.length === 0) return true;
         if (date <= queue[0].endsAt - 1500000) {
           await interaction.reply(
-            `:no_entry_sign: <@${user.id}> Você não pode claimar 30 minutos antes do proximo na fila`
+            `\n:no_entry_sign: <@${user.id}> Você ainda não pode dar claim aqui. :no_entry_sign:`
           );
           return false;
         }
@@ -142,30 +144,34 @@ module.exports = {
         const eightyOne = userRoles.includes("81+");
         const eightyFive = userRoles.includes("85+");
         const hasNoRole = !seventyFive && !eightyOne && !eightyFive;
+
         if (hasNoRole) {
-          await interaction.reply(
-            `:no_entry_sign: <@${user.id}> Você não possui nenhum cargo, portanto não pode claimar quando outro estiver na fila`
-          );
+          await interaction.reply({
+            content: `\n:no_entry_sign: <@${user.id}> Você não possui nenhum cargo, portanto não pode claimar quando outro estiver na fila. :no_entry_sign:`,
+            ephemeral: true,
+          });
           return false;
         }
         if (date >= queue[0].endsAt - 300000 && seventyFive) {
-          console.log("seventyFive");
           return true;
         }
 
         if (date >= queue[0].endsAt - 900000 && eightyOne) {
-          console.log("eightyOne");
           return true;
         }
+
         if (date >= queue[0].endsAt - 1500000 && eightyFive) {
-          console.log("eightyFive");
           return true;
         }
       };
+
       const canClaim = await checkUserRole();
+
       console.log(canClaim);
+
       if (!canClaim) return;
-      if (newQueueDateCalc.length >= 0) {
+
+      if (queueDateCalc.length >= 0) {
         timeToEnter = startedAt - date;
         minuteTimeToEnter = timeToEnter / 60000;
         const formattedMinute = minuteTimeToEnter.toString().slice(0, 3);
@@ -250,27 +256,29 @@ module.exports = {
         JSON.stringify(queue)
       );
       if (queue.length === 1) {
-        await interaction.reply(
-          `:white_check_mark: <@${user.id}> reivindicou ${
+        await interaction.reply({
+          content: `\n:white_check_mark: <@${user.id}> reivindicou ${
             chamberName.charAt(0).toUpperCase() + chamberName.slice(1)
           } ${chamberNumber} no ${floor} por ${tickets} minutos   
-            \n :ballot_box_with_check: ${
+            \n:ballot_box_with_check: ${
               interaction.user.username
-            } você esta liberado! Entre na Magic Square!`
-        );
+            } você está liberado! Entre na Magic Square!`,
+          ephemeral: true,
+        });
       }
       if (queue.length > 1) {
         let result = timeToEnter - 300000;
-        await interaction.reply(
-          `:white_check_mark: <@${user.id}> reivindicou ${
+        await interaction.reply({
+          content: `:white_check_mark: <@${user.id}> reivindicou ${
             chamberName.charAt(0).toUpperCase() + chamberName.slice(1)
           } ${chamberNumber} no ${floor} por ${tickets} minutos   
-              \n :stopwatch: Sua vez é em ${minutesLeft} minutos, esteja pronto!`
-        );
+              \n:stopwatch: Sua vez é em ${minutesLeft} minutos, esteja pronto!`,
+          ephemeral: true,
+        });
 
         setTimeout(() => {
           channel.send({
-            content: `:rotating_light: <@${user.id}>, esteja pronto! Em 5 minutos você estara liberado para entrar na Magic Square!`,
+            content: `\n:rotating_light: <@${user.id}>, esteja pronto! Em 5 minutos você estara liberado para entrar na Magic Square!`,
             ephemeral: true,
           });
         }, result);
@@ -288,9 +296,10 @@ module.exports = {
         );
         if (timeoutQueue.length === 0) return;
         else {
-          channel.send(
-            `:ballot_box_with_check: <@${timeoutQueue[0].id}>, Você esta liberado! Entre na Magic Square!`
-          );
+          channel.send({
+            content: `\n:ballot_box_with_check: <@${timeoutQueue[0].id}>, Você está liberado! Entre na Magic Square!`,
+            ephemeral: true,
+          });
         }
       }, queueExit);
     } catch (error) {
