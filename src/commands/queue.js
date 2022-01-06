@@ -83,7 +83,7 @@ module.exports = {
       const formattedChamber = `${chamberName}-${chamberNumber}.json`;
       const queue = new Queue();
       const queueFile = JSON.parse(
-        fs.readFileSync(`./src/data/${floor}/${formattedChamber}`)
+        fs.readFileSync(`./src/magic-square/${floor}/${formattedChamber}`)
       );
       let uiChamberName;
       let uiChamberNumber;

@@ -84,7 +84,7 @@ module.exports = {
       const formattedChamber = `${chamberName}-${chamberNumber}.json`;
       let queue;
       queue = JSON.parse(
-        fs.readFileSync(`./src/data/${floor}/${formattedChamber}`)
+        fs.readFileSync(`./src/magic-square/${floor}/${formattedChamber}`)
       );
       let queueDateCalc = eval(queue);
 
@@ -96,6 +96,11 @@ module.exports = {
       const user = client.users.cache.find(
         (u) => u.tag === `${interaction.user.tag}`
       );
+
+      if (queue.length > 0 && queue[0].endsAt < date) {
+        queue.shift();
+      }
+
       const rolesTicketsCalc =
         !member.roles.cache.some((role) => role.name === "81+") ||
         !member.roles.cache.some((role) => role.name === "85+");
@@ -107,7 +112,8 @@ module.exports = {
         });
 
         return;
-      } else if (
+      }
+      if (
         Number(tickets) > 300 &&
         !member.roles.cache.some((role) => role.name === "85+")
       ) {
@@ -128,6 +134,7 @@ module.exports = {
           content: `\n:no_entry_sign: <@${user.id}> essa fila está cheia! :no_entry_sign:`,
           ephemeral: true,
         });
+
         return;
       }
 
@@ -144,12 +151,12 @@ module.exports = {
         const eightyOne = userRoles.includes("81+");
         const eightyFive = userRoles.includes("85+");
         const hasNoRole = !seventyFive && !eightyOne && !eightyFive;
-
         if (hasNoRole) {
           await interaction.reply({
             content: `\n:no_entry_sign: <@${user.id}> Você não possui nenhum cargo, portanto não pode claimar quando outro estiver na fila. :no_entry_sign:`,
             ephemeral: true,
           });
+
           return false;
         }
         if (date >= queue[0].endsAt - 300000 && seventyFive) {
@@ -167,8 +174,6 @@ module.exports = {
 
       const canClaim = await checkUserRole();
 
-      console.log(canClaim);
-
       if (!canClaim) return;
 
       if (queueDateCalc.length >= 0) {
@@ -177,7 +182,6 @@ module.exports = {
         const formattedMinute = minuteTimeToEnter.toString().slice(0, 3);
         minutesLeft = formattedMinute;
       }
-
       const calcEndTime = (tickets) => {
         switch (tickets) {
           case "30":
@@ -235,7 +239,7 @@ module.exports = {
       };
       calcEndTime(tickets);
 
-      endsAt = startedAt + 420000;
+      endsAt = date + 120000;
 
       const player = {
         userName: interaction.user.username,
@@ -250,11 +254,28 @@ module.exports = {
         endsAt: endsAt,
       };
 
+      const playerForAllPlayersQueue = {
+        id: user.id,
+        floor: floor,
+        spot: formattedChamber,
+      };
+
       const newQueue = queue.push(player);
       fs.writeFileSync(
-        `./src/data/${floor}/${formattedChamber}`,
+        `./src/magic-square/${floor}/${formattedChamber}`,
         JSON.stringify(queue)
       );
+
+      allPlayersQueue = JSON.parse(
+        fs.readFileSync("./src/magic-square/players-on-queue.json")
+      );
+      console.log(allPlayersQueue);
+      const newAllPlayersQueue = allPlayersQueue.push(playerForAllPlayersQueue);
+      fs.writeFileSync(
+        `./src/magic-square/players-on-queue.json`,
+        JSON.stringify(allPlayersQueue)
+      );
+
       if (queue.length === 1) {
         await interaction.reply({
           content: `\n:white_check_mark: <@${user.id}> reivindicou ${
@@ -266,6 +287,7 @@ module.exports = {
           ephemeral: true,
         });
       }
+
       if (queue.length > 1) {
         let result = timeToEnter - 300000;
         await interaction.reply({
@@ -283,17 +305,39 @@ module.exports = {
           });
         }, result);
       }
+
       const queueExit = endsAt - date;
+
       setTimeout(() => {
+        const checkPlayerInQueue = () => {
+          const allPlayersOnQueue = JSON.parse(
+            fs.readFileSync("./src/magic-square/players-on-queue.json")
+          );
+          const check = allPlayersOnQueue.map(
+            (player) => player.id === user.id
+          );
+          console.log(check);
+          return check;
+        };
+        checkPlayerInQueue();
+
+        if (!checkPlayerInQueue) return;
+
         let timeoutQueue = JSON.parse(
-          fs.readFileSync(`./src/data/${floor}/${formattedChamber}`)
+          fs.readFileSync(`./src/magic-square/${floor}/${formattedChamber}`)
         );
         eval(timeoutQueue);
         timeoutQueue.shift();
         fs.writeFileSync(
-          `./src/data/${floor}/${formattedChamber}`,
+          `./src/magic-square/${floor}/${formattedChamber}`,
           JSON.stringify(timeoutQueue)
         );
+        allPlayersQueue.shift();
+        fs.writeFileSync(
+          `./src/magic-square/players-on-queue.json`,
+          JSON.stringify(allPlayersQueue)
+        );
+
         if (timeoutQueue.length === 0) return;
         else {
           channel.send({
