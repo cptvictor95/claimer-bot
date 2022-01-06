@@ -8,7 +8,7 @@ const fs = require("fs");
 
 module.exports = {
   data: new SlashCommandBuilder()
-    .setName("claim")
+    .setName("square")
     .setDescription(
       "Reivindica uma sala na Magic Square baseado no andar, nome e numero da chamber e tickets"
     )
@@ -69,7 +69,7 @@ module.exports = {
   async execute(interaction) {
     try {
       if (!interaction.isCommand) return;
-      if (interaction.commandName === "claim");
+      if (interaction.commandName === "square");
       const floor = interaction.options.getString("floor");
       const chamberName = interaction.options.getString("chambername");
       const chamberNumber = interaction.options.getString("chambernumber");
@@ -239,8 +239,6 @@ module.exports = {
       };
       calcEndTime(tickets);
 
-      endsAt = date + 120000;
-
       const player = {
         userName: interaction.user.username,
         id: user.id,
@@ -267,12 +265,12 @@ module.exports = {
       );
 
       allPlayersQueue = JSON.parse(
-        fs.readFileSync("./src/magic-square/players-on-queue.json")
+        fs.readFileSync("./src/players-on-queue.json")
       );
       console.log(allPlayersQueue);
       const newAllPlayersQueue = allPlayersQueue.push(playerForAllPlayersQueue);
       fs.writeFileSync(
-        `./src/magic-square/players-on-queue.json`,
+        `./src/players-on-queue.json`,
         JSON.stringify(allPlayersQueue)
       );
 
@@ -311,7 +309,7 @@ module.exports = {
       setTimeout(() => {
         const checkPlayerInQueue = () => {
           const allPlayersOnQueue = JSON.parse(
-            fs.readFileSync("./src/magic-square/players-on-queue.json")
+            fs.readFileSync("./src/players-on-queue.json")
           );
           const check = allPlayersOnQueue.map(
             (player) => player.id === user.id
@@ -334,7 +332,7 @@ module.exports = {
         );
         allPlayersQueue.shift();
         fs.writeFileSync(
-          `./src/magic-square/players-on-queue.json`,
+          `./src/players-on-queue.json`,
           JSON.stringify(allPlayersQueue)
         );
 

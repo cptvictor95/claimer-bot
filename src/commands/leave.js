@@ -14,6 +14,7 @@ module.exports = {
       const queue = JSON.parse(
         fs.readFileSync("./src/magic-square/players-on-queue.json")
       );
+      if (queue.length === 0) return;
 
       const removeFromQueue = async () => {
         const findPlayer = queue.find((player) => player.id === user.id);
@@ -35,10 +36,12 @@ module.exports = {
         const arrayOfPlayersId = queueOfPlayer.map((player) => player.id);
         const playerIndex = arrayOfPlayersId.indexOf(`${findPlayer.id}`);
         const newQueue = queueOfPlayer.splice(playerIndex, 1);
+
         const indexOffAllPlayersQueue = allPlayersQueueIds.indexOf(
           `${user.id}`
         );
         const newAllPlayersQueue = queue.splice(indexOffAllPlayersQueue, 1);
+
         fs.writeFileSync(
           `./src/magic-square/${findPlayer.floor}/${findPlayer.spot}`,
           JSON.stringify(queueOfPlayer)
