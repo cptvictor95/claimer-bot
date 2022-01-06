@@ -1,6 +1,8 @@
 const { SlashCommandBuilder } = require("@discordjs/builders");
 const fs = require("fs");
-const translatePositionText = require("../utils/translatePositionText.js");
+const { calcEndTime } = require("../utils/calcEndTime.js");
+const { checkUserCanClaim } = require("../utils/checkUserCanClaim.js");
+const { translatePositionText } = require("../utils/translatePositionText.js");
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -9,7 +11,7 @@ module.exports = {
     .addStringOption((option) =>
       option
         .setName("floor")
-        .setDescription("Magic Square Floor Number (2F)")
+        .setDescription("Secret Peak Floor (2F)")
         .setRequired(true)
         .addChoice("2F", "2F")
     )
@@ -18,10 +20,10 @@ module.exports = {
         .setName("position")
         .setDescription("Choose between Upper or Down and respective locations")
         .setRequired(true)
-        .addChoice("Upper-North", "upper-north")
-        .addChoice("Upper-South", "upper-south")
-        .addChoice("Down-Right", "down-right")
-        .addChoice("Down-Left", "down-left")
+        .addChoice("Cima Norte", "upper-north")
+        .addChoice("Cima Sul", "upper-south")
+        .addChoice("Baixo Direita", "down-right")
+        .addChoice("Baixo Esquerda", "down-left")
     )
     .addStringOption((option) =>
       option
@@ -50,9 +52,7 @@ module.exports = {
     try {
       if (!interaction.isCommand) return;
       if (interaction.commandName === "peak");
-      console.log(interaction.options.getString("floor"));
-      console.log(interaction.options.getString("position"));
-      console.log(interaction.options.getString("tickets"));
+
       const floor = interaction.options.getString("floor");
       const position = interaction.options.getString("position");
       const tickets = interaction.options.getString("tickets");
@@ -61,7 +61,7 @@ module.exports = {
       const guild = client.guilds.cache.get("903985002650411049");
       const channel = guild.channels.cache.get("903985002650411052");
       const member = interaction.member;
-      let formattedPosition;
+      let formattedPosition = translatePositionText(position);
 
       translatePositionText(position);
 
@@ -87,11 +87,13 @@ module.exports = {
         queue.shift();
       }
 
-      const rolesTicketsCalc =
-        !member.roles.cache.some((role) => role.name === "81+") ||
-        !member.roles.cache.some((role) => role.name === "85+");
+      const userRoles = member.roles.cache.map((role) => role.name);
 
-      if (Number(tickets) > 60 && !rolesTicketsCalc) {
+      const isTierOne = userRoles.includes("75+");
+      const isTierTwo = userRoles.includes("81+");
+      const isTierThree = userRoles.includes("85+");
+
+      if (Number(tickets) > 60 && isTierOne) {
         await interaction.reply({
           content: `\n:no_entry_sign: <@${user.id}> você pode usar no máximo 2 tickets. :no_entry_sign:`,
           ephemeral: true,
@@ -99,10 +101,7 @@ module.exports = {
 
         return;
       }
-      if (
-        Number(tickets) > 300 &&
-        !member.roles.cache.some((role) => role.name === "85+")
-      ) {
+      if (Number(tickets) > 300 && isTierTwo) {
         await interaction.reply({
           content: `\n:no_entry_sign: <@${user.id}> você pode usar no máximo 10 tickets. :no_entry_sign:`,
           ephemeral: true,
@@ -124,43 +123,15 @@ module.exports = {
         return;
       }
 
-      const checkUserRole = async () => {
-        if (queue.length === 0) return true;
-        if (date <= queue[0].endsAt - 1500000) {
-          await interaction.reply(
-            `\n:no_entry_sign: <@${user.id}> Você ainda não pode dar claim aqui. :no_entry_sign:`
-          );
-          return false;
-        }
-
-        const userRoles = member.roles.cache.map((role) => role.name);
-        const seventyFive = userRoles.includes("75+");
-        const eightyOne = userRoles.includes("81+");
-        const eightyFive = userRoles.includes("85+");
-        const hasNoRole = !seventyFive && !eightyOne && !eightyFive;
-
-        if (hasNoRole) {
-          await interaction.reply({
-            content: `\n:no_entry_sign: <@${user.id}> Você não possui nenhum cargo, portanto não pode claimar quando outro estiver na fila. :no_entry_sign:`,
-            ephemeral: true,
-          });
-
-          return false;
-        }
-        if (date >= queue[0].endsAt - 300000 && seventyFive) {
-          return true;
-        }
-
-        if (date >= queue[0].endsAt - 900000 && eightyOne) {
-          return true;
-        }
-
-        if (date >= queue[0].endsAt - 1500000 && eightyFive) {
-          return true;
-        }
-      };
-
-      const canClaim = await checkUserRole();
+      const canClaim = await checkUserCanClaim(
+        date,
+        queue,
+        isTierOne,
+        isTierTwo,
+        isTierThree,
+        interaction,
+        user
+      );
 
       if (!canClaim) return;
 
@@ -171,62 +142,7 @@ module.exports = {
         minutesLeft = formattedMinute;
       }
 
-      const calcEndTime = (tickets) => {
-        switch (tickets) {
-          case "30":
-            endsAt = startedAt + 1800000;
-            break;
-          case "60":
-            endsAt = startedAt + 3600000;
-            break;
-          case "90":
-            endsAt = startedAt + 5400000;
-            break;
-          case "120":
-            endsAt = startedAt + 7200000;
-            break;
-          case "150":
-            endsAt = startedAt + 9000000;
-            break;
-          case "180":
-            endsAt = startedAt + 10800000;
-            break;
-          case "210":
-            endsAt = startedAt + 12600000;
-            break;
-          case "240":
-            endsAt = startedAt + 14400000;
-            break;
-          case "270":
-            endsAt = startedAt + 16200000;
-            break;
-          case "300":
-            endsAt = startedAt + 18000000;
-            break;
-          case "330":
-            endsAt = startedAt + 19800000;
-            break;
-          case "360":
-            endsAt = startedAt + 21600000;
-            break;
-          case "390":
-            endsAt = startedAt + 23400000;
-            break;
-          case "420":
-            endsAt = startedAt + 25200000;
-            break;
-          case "450":
-            endsAt = startedAt + 27000000;
-            break;
-          case "480":
-            endsAt = startedAt + 28800000;
-            break;
-
-          default:
-            break;
-        }
-      };
-      calcEndTime(tickets);
+      calcEndTime(tickets, startedAt);
 
       const player = {
         userName: interaction.user.username,
@@ -245,8 +161,10 @@ module.exports = {
         floor: floor,
         spot: position,
       };
-      //Daqui para Baixo a fila sempre estara populada pelo player que deu o claim
-      const newQueue = queue.push(player);
+
+      // Daqui para Baixo a fila sempre estara populada pelo player que deu o claim
+
+      queue.push(player);
       fs.writeFileSync(
         `./src/secret-peak/${floor}/${position}-aggressive.json`,
         JSON.stringify(queue)
@@ -255,8 +173,8 @@ module.exports = {
       allPlayersQueue = JSON.parse(
         fs.readFileSync("./src/players-on-queue.json")
       );
-      console.log(allPlayersQueue);
-      const newAllPlayersQueue = allPlayersQueue.push(playerForAllPlayersQueue);
+
+      allPlayersQueue.push(playerForAllPlayersQueue);
       fs.writeFileSync(
         `./src/players-on-queue.json`,
         JSON.stringify(allPlayersQueue)
@@ -264,8 +182,8 @@ module.exports = {
 
       if (queue.length === 1) {
         await interaction.reply({
-          content: `\n:white_check_mark: <@${user.id}> pegou o spot de ${formattedPosition} agressivo no ${floor} por ${tickets} minutos   
-            \n:ballot_box_with_check: ${interaction.user.username}, não há ninguem na fila, você está liberado! Entre no Secret Peak!`,
+          content: `\n:white_check_mark: <@${user.id}> pegou o spot de ${formattedPosition} agressivo no ${floor} por ${tickets} minutos
+            \n:ballot_box_with_check: ${interaction.user.username}, você já pode entrar no Secret Peak!`,
           ephemeral: true,
         });
       }
@@ -273,14 +191,13 @@ module.exports = {
       if (queue.length > 1) {
         let result = timeToEnter - 300000;
         await interaction.reply({
-          content: `:white_check_mark: <@${user.id}> pegou o spot de ${formattedPosition} no ${floor} por ${tickets} minutos   
+          content: `:white_check_mark: <@${user.id}> pegou o spot de ${formattedPosition} no ${floor} por ${tickets} minutos
               \n:stopwatch: Sua vez é em ${minutesLeft} minutos, esteja pronto!`,
-          ephemeral: true,
         });
 
         setTimeout(() => {
           channel.send({
-            content: `\n:rotating_light: <@${user.id}>, esteja pronto! Em 5 minutos você estara liberado para entrar na Magic Square!`,
+            content: `\n:rotating_light: <@${user.id}>, esteja pronto! Em 5 minutos você poderá entrar no Secret Peak!`,
             ephemeral: true,
           });
         }, result);
@@ -296,9 +213,10 @@ module.exports = {
           const check = allPlayersOnQueue.map(
             (player) => player.id === user.id
           );
-          console.log(check);
+
           return check;
         };
+
         checkPlayerInQueue();
 
         if (!checkPlayerInQueue) return;
@@ -323,14 +241,14 @@ module.exports = {
         if (timeoutQueue.length === 0) return;
         else {
           channel.send({
-            content: `\n:ballot_box_with_check: <@${timeoutQueue[0].id}>, Você está liberado! Entre na Magic Square!`,
+            content: `\n:ballot_box_with_check: <@${timeoutQueue[0].id}> Você já pode entrar no Secret Peak!`,
             ephemeral: true,
           });
         }
       }, queueExit);
     } catch (error) {
       await interaction.reply({
-        content: `There was an error while executing this command!\nError:${error.message}`,
+        content: `Um erro aconteceu ao executar esse comando, por favor verifique com a staff.\nError:${error.message}`,
         ephemeral: true,
       });
     }

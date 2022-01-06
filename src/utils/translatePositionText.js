@@ -2,23 +2,15 @@ module.exports = {
   translatePositionText: function (position) {
     switch (position) {
       case "upper-north":
-        formattedPosition = "Cima Norte";
-        break;
+        return "Cima Norte";
       case "upper-south":
-        formattedPosition = "Cima Sul";
-
-        break;
+        return "Cima Sul";
       case "down-left":
-        formattedPosition = "Baixo Esquerda";
-        break;
+        return "Baixo Esquerda";
       case "down-right":
-        formattedPosition = "Baixo Direita";
-        break;
-
+        return "Baixo Direita";
       default:
         break;
     }
   },
 };
-
-module.exports = translatePositionText;
