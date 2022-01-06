@@ -2,7 +2,6 @@ const fs = require("fs");
 const { Client, Intents, Collection } = require("discord.js");
 const claim = require("./commands/claim");
 const { execute } = require("./commands/claim");
-const fiveMinutesMessage = require("./events/fiveMinutesMessage");
 
 const client = new Client({
   intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_MESSAGES],
