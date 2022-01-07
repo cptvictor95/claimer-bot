@@ -1,5 +1,6 @@
 const { SlashCommandBuilder } = require("@discordjs/builders");
 const fs = require("fs");
+const moment = require("moment-timezone");
 
 class Queue {
   constructor() {
@@ -36,7 +37,7 @@ class Queue {
 
 module.exports = {
   data: new SlashCommandBuilder()
-    .setName("queue")
+    .setName("filapraca")
     .setDescription(
       "Mostra a fila de jogadores requisitada por qual andar, nome da chamber e numero da chamber"
     )
@@ -60,9 +61,7 @@ module.exports = {
         )
         .setRequired(true)
         .addChoice("Gold Chamber", "gold")
-        .addChoice("White Silver Chamber", "white-silver")
         .addChoice("Experience Chamber", "experience")
-        .addChoice("Training Chamber", "training")
         .addChoice("Magic Stone Chamber", "magic-stone")
     )
     .addStringOption((option) =>
@@ -81,12 +80,15 @@ module.exports = {
       const chamberName = interaction.options.getString("chambername");
       const chamberNumber = interaction.options.getString("chambernumber");
       const formattedChamber = `${chamberName}-${chamberNumber}.json`;
-      const queue = new Queue();
       const queueFile = JSON.parse(
         fs.readFileSync(`./src/magic-square/${floor}/${formattedChamber}`)
       );
       let uiChamberName;
       let uiChamberNumber;
+
+      const client = interaction.client;
+      const guild = client.guilds.cache.get("903985002650411049");
+      const channel = guild.channels.cache.get("903985002650411052");
 
       switch (chamberName) {
         case "gold":
@@ -116,7 +118,17 @@ module.exports = {
       if (chamberNumber === "3") {
         uiChamberNumber = "III";
       }
-      queue.items = queueFile;
+
+      const endsAtMap = Array.from(queueFile).map((player, index) => {
+        return moment.tz(player.endsAt, "America/Sao_Paulo").format();
+      });
+      const startedAtMap = Array.from(queueFile).map((player, index) => {
+        return moment.tz(player.startedAt, "America/Sao_paulo").format();
+      });
+
+      const formattedEnds = endsAtMap.map((date) => date.slice(11, 19));
+      const formattedStarted = startedAtMap.map((date) => date.slice(11, 19));
+
       if (queueFile.length == 0) {
         await interaction.reply({
           ephemeral: true,
@@ -124,28 +136,59 @@ module.exports = {
         });
         return;
       }
-      await interaction.reply({
-        content: `${queue.items.map((item, index) => {
-          if (item.userName == interaction.user.username) {
-            return `A posição de ${item.userName} na fila é ${index + 1}`;
-          }
-        })}`,
-      });
-      await interaction.followUp({
-        ephemeral: true,
-        content: `Esse é a lista atualizada de jogadores na fila. \n
-1.  :video_game: ${
-          queue.items[0].userName
-        } is on: ${uiChamberName} ${uiChamberNumber}. ${
-          queue.items[0].spot.floor
-        },${queue.items.slice(1).map((item, index) => {
-          return `\n${index + 2}. :stopwatch: ${
-            item.userName
-          } esta esperando sua vez na fila: ${uiChamberName} ${uiChamberNumber}. ${
-            item.spot.floor
-          }`;
-        })}`,
-      });
+      if (queueFile.length == 1) {
+        await interaction.reply({
+          ephemeral: true,
+          content: `---- Fila ${floor} ${uiChamberName} ${uiChamberNumber} ----\n\n :video_game: 1- ${
+            queueFile[0].userName
+          }:\n Tickets: ${queueFile[0].spot.tickets / 30}\n Inicio: ${moment
+            .tz(queueFile[0].startedAt, "America/Sao_Paulo")
+            .format()
+            .slice(11, 16)}\n Termino: ${moment
+            .tz(queueFile[0].endsAt, "America/Sao_Paulo")
+            .format()
+            .slice(11, 16)}`,
+        });
+      }
+      if (queueFile.length == 2) {
+        await interaction.reply({
+          ephemeral: true,
+          content: `---- Fila ${floor} ${uiChamberName} ${uiChamberNumber} ----\n\n:video_game: 1- ${
+            queueFile[0].userName
+          }: \n Tickets: ${queueFile[0].spot.tickets / 30}\n Inicio: ${moment
+            .tz(queueFile[0].startedAt, "America/Sao_Paulo")
+            .format()
+            .slice(11, 16)}\n Termino: ${moment
+            .tz(queueFile[0].endsAt, "America/Sao_Paulo")
+            .format()
+            .slice(11, 16)}\n \n:stopwatch: 2- ${
+            queueFile[1].userName
+          }:\n Tickets: ${queueFile[1].spot.tickets / 30}\n Inicio: ${moment
+            .tz(queueFile[1].startedAt, "America/Sao_Paulo")
+            .format()
+            .slice(11, 16)}\n Termino: ${moment
+            .tz(queueFile[1].endsAt, "America/Sao_Paulo")
+            .format()
+            .slice(11, 16)}`,
+        });
+      }
+      //       await interaction.followUp({
+      //         ephemeral: true,
+      //         content: `Esse é a lista atualizada de jogadores na fila. \n
+      // 1.  :video_game: ${
+      //           queueFile[0].userName
+      //         } is on: ${uiChamberName} ${uiChamberNumber}. ${
+      //           queueFile[0].spot.floor
+      //         },${Array.from(queueFile)
+      //           .slice(1)
+      //           .map((item, index) => {
+      //             return `\n${index + 2}. :stopwatch: ${
+      //               item.userName
+      //             } esta esperando sua vez na fila: ${uiChamberName} ${uiChamberNumber}. ${
+      //               item.spot.floor
+      //             }`;
+      //           })}`,
+      //       });
     } catch (error) {
       await interaction.reply({
         content: `There was an error while executing this command!\nError:${error.message}`,

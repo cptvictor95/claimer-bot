@@ -1,5 +1,5 @@
 module.exports = {
-  calcEndTime: function (tickets, startedAt) {
+  calcEndTime: function (tickets, startedAt, endsAt) {
     switch (tickets) {
       case "30":
         endsAt = startedAt + 1800000;
@@ -53,5 +53,6 @@ module.exports = {
       default:
         break;
     }
+    return endsAt;
   },
 };
