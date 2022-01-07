@@ -1,21 +1,17 @@
 const { SlashCommandBuilder } = require("@discordjs/builders");
 const fs = require("fs");
-
-/** TO-DO
- * [] DELETE EPHEMERAL MESSAGES 3 MINUTES AFTER SENDING IT
- * [] REFACTOR UTILITY & VALIDATION FUNCTIONS OUT OF THE COMMAND FILE
- */
+const { calcEndTime } = require("../utils/calcEndTime");
 
 module.exports = {
   data: new SlashCommandBuilder()
     .setName("square")
     .setDescription(
-      "Reivindica uma sala na Magic Square baseado no andar, nome e numero da chamber e tickets"
+      "Reivindica uma sala na Magic Square baseado no andar, nome e número da chamber e tickets"
     )
     .addStringOption((option) =>
       option
         .setName("floor")
-        .setDescription("Magic Square Floor Number (1F-6F)")
+        .setDescription("Número do Floor (1F-6F)")
         .setRequired(true)
         .addChoice("1F", "1F")
         .addChoice("2F", "2F")
@@ -27,9 +23,7 @@ module.exports = {
     .addStringOption((option) =>
       option
         .setName("chambername")
-        .setDescription(
-          "Magic Square Chamber Name (Gold/White Silver/Experience/Training/Magic Stone)"
-        )
+        .setDescription("Nome da Chamber (Gold/Experience/Magic Stone)")
         .setRequired(true)
         .addChoice("Gold Chamber", "gold")
         .addChoice("Experience Chamber", "experience")
@@ -38,7 +32,7 @@ module.exports = {
     .addStringOption((option) =>
       option
         .setName("chambernumber")
-        .setDescription("Magic Square Chamber Number (I/II/III)")
+        .setDescription("Número da Chamber (I/II/III)")
         .setRequired(true)
         .addChoice("Chamber I", "1")
         .addChoice("Chamber II", "2")
@@ -47,7 +41,7 @@ module.exports = {
     .addStringOption((option) =>
       option
         .setName("tickets")
-        .setDescription("Number of tickets used: 1 or 2")
+        .setDescription("Número de tickets: 1 or 2")
         .setRequired(true)
         .addChoice("1", "30")
         .addChoice("2", "60")
@@ -101,29 +95,6 @@ module.exports = {
         queue.shift();
       }
 
-      const rolesTicketsCalc =
-        !member.roles.cache.some((role) => role.name === "81+") ||
-        !member.roles.cache.some((role) => role.name === "85+");
-
-      if (Number(tickets) > 60 && !rolesTicketsCalc) {
-        await interaction.reply({
-          content: `\n:no_entry_sign: <@${user.id}> você pode usar no máximo 2 tickets. :no_entry_sign:`,
-          ephemeral: true,
-        });
-
-        return;
-      }
-      if (
-        Number(tickets) > 300 &&
-        !member.roles.cache.some((role) => role.name === "85+")
-      ) {
-        await interaction.reply({
-          content: `\n:no_entry_sign: <@${user.id}> você pode usar no máximo 10 tickets. :no_entry_sign:`,
-          ephemeral: true,
-        });
-        return;
-      }
-
       if (queueDateCalc.length == 1) {
         const endsAt01 = queueDateCalc[0].endsAt;
         startedAt = endsAt01;
@@ -140,20 +111,23 @@ module.exports = {
 
       const checkUserRole = async () => {
         if (queue.length === 0) return true;
+
         if (date <= queue[0].endsAt - 1500000) {
           await interaction.reply(
             `\n:no_entry_sign: <@${user.id}> Você ainda não pode dar claim aqui. :no_entry_sign:`
           );
           return false;
         }
+
         const userRoles = member.roles.cache.map((role) => role.name);
-        const seventyFive = userRoles.includes("75+");
-        const eightyOne = userRoles.includes("81+");
-        const eightyFive = userRoles.includes("85+");
-        const hasNoRole = !seventyFive && !eightyOne && !eightyFive;
+        const isTierOne = userRoles.includes("75+");
+        const isTierTwo = userRoles.includes("81+");
+        const isTierThree = userRoles.includes("85+");
+        const hasNoRole = !isTierOne && !isTierTwo && !isTierThree;
+
         if (hasNoRole) {
           await interaction.reply({
-            content: `\n:no_entry_sign: <@${user.id}> Você não possui nenhum cargo, portanto não pode claimar quando outro estiver na fila. :no_entry_sign:`,
+            content: `\n:no_entry_sign: <@${user.id}> Você não possui nenhum cargo, por favor verifique com a staff. :no_entry_sign:`,
             ephemeral: true,
           });
 
@@ -182,62 +156,8 @@ module.exports = {
         const formattedMinute = minuteTimeToEnter.toString().slice(0, 3);
         minutesLeft = formattedMinute;
       }
-      const calcEndTime = (tickets) => {
-        switch (tickets) {
-          case "30":
-            endsAt = startedAt + 1800000;
-            break;
-          case "60":
-            endsAt = startedAt + 3600000;
-            break;
-          case "90":
-            endsAt = startedAt + 5400000;
-            break;
-          case "120":
-            endsAt = startedAt + 7200000;
-            break;
-          case "150":
-            endsAt = startedAt + 9000000;
-            break;
-          case "180":
-            endsAt = startedAt + 10800000;
-            break;
-          case "210":
-            endsAt = startedAt + 12600000;
-            break;
-          case "240":
-            endsAt = startedAt + 14400000;
-            break;
-          case "270":
-            endsAt = startedAt + 16200000;
-            break;
-          case "300":
-            endsAt = startedAt + 18000000;
-            break;
-          case "330":
-            endsAt = startedAt + 19800000;
-            break;
-          case "360":
-            endsAt = startedAt + 21600000;
-            break;
-          case "390":
-            endsAt = startedAt + 23400000;
-            break;
-          case "420":
-            endsAt = startedAt + 25200000;
-            break;
-          case "450":
-            endsAt = startedAt + 27000000;
-            break;
-          case "480":
-            endsAt = startedAt + 28800000;
-            break;
 
-          default:
-            break;
-        }
-      };
-      calcEndTime(tickets);
+      calcEndTime(tickets, startedAt);
 
       const player = {
         userName: interaction.user.username,
@@ -258,7 +178,8 @@ module.exports = {
         spot: formattedChamber,
       };
 
-      const newQueue = queue.push(player);
+      queue.push(player);
+
       fs.writeFileSync(
         `./src/magic-square/${floor}/${formattedChamber}`,
         JSON.stringify(queue)
@@ -267,8 +188,8 @@ module.exports = {
       allPlayersQueue = JSON.parse(
         fs.readFileSync("./src/players-on-queue.json")
       );
-      console.log(allPlayersQueue);
-      const newAllPlayersQueue = allPlayersQueue.push(playerForAllPlayersQueue);
+
+      allPlayersQueue.push(playerForAllPlayersQueue);
       fs.writeFileSync(
         `./src/players-on-queue.json`,
         JSON.stringify(allPlayersQueue)
@@ -281,7 +202,7 @@ module.exports = {
           } ${chamberNumber} no ${floor} por ${tickets} minutos   
             \n:ballot_box_with_check: ${
               interaction.user.username
-            } você está liberado! Entre na Magic Square!`,
+            } você já pode entrar na Magic Square!`,
           ephemeral: true,
         });
       }
@@ -298,7 +219,7 @@ module.exports = {
 
         setTimeout(() => {
           channel.send({
-            content: `\n:rotating_light: <@${user.id}>, esteja pronto! Em 5 minutos você estara liberado para entrar na Magic Square!`,
+            content: `\n:rotating_light: <@${user.id}>, esteja pronto! Em 5 minutos você poderá entrar na Magic Square!`,
             ephemeral: true,
           });
         }, result);
@@ -314,9 +235,10 @@ module.exports = {
           const check = allPlayersOnQueue.map(
             (player) => player.id === user.id
           );
-          console.log(check);
+
           return check;
         };
+
         checkPlayerInQueue();
 
         if (!checkPlayerInQueue) return;
@@ -346,7 +268,7 @@ module.exports = {
       }, queueExit);
     } catch (error) {
       await interaction.reply({
-        content: `There was an error while executing this command!\nError:${error.message}`,
+        content: `Um erro aconteceu ao executar esse comando, por favor verifique com a staff.\nError:${error.message}`,
         ephemeral: true,
       });
     }

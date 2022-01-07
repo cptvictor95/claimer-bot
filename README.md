@@ -5,26 +5,29 @@ This is a discord bot created for organizational purposes on Mir4's Magic Square
 ## Bot Commands
 
 - /ping
---This command is used for testing, if everithing its running correct, you should receive a message *Pong* indicating
-that the bot receives and send infos.
+  -- This command is used for testing, if everything is running correct, you should receive a message `Pong` indicating
+  that the bot receives and send infos.
 
 - /server
---Server command shows what server you are in, and how many users is on the same discord server
+  -- Shows what server you are in, and how many users is on the same discord server
 
 - /user
---User command shows user infos like Id and Tagname
+  -- Shows user infos like `Id` and `Tagname`
 
 - /help
---Help command shows all the commands for user usage
+  -- Shows the command list with all descriptions.
 
 - /queue
---Queue command shows the queue length and users positions inside that queue that the user asks for in the textline
+  -- Shows the queue and all the users in it.
 
-- /claim
---Claim command puts the user on the queue, select infos like what floor and chamber you want to queue for and you are in.
+- /peak
+  -- Puts you in the queue. Select what floor and spot you want to queue for.
 
-- /remove
---Remove command removes the user from the queue that he specified 
+- /square
+  -- Puts you in the queue. Select what floor and chamber you want to queue for.
+
+- /leave
+  -- Leaves the queue you are in.
 
 ## Usage instructions
 
@@ -43,9 +46,9 @@ TOKEN=asd123
 
 ## Scripts
 
-Run `yarn dev` or `npm run dev` - To run the development server on your local machine.
-
 Run `yarn deploy` or `npm run deploy` - To deploy the commands created inside the `/commands` folder.
+
+Run `yarn dev` or `npm run dev` - To run the development server on your local machine.
 
 ### Invitation link format
 
