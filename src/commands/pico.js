@@ -6,7 +6,7 @@ const { translatePositionText } = require("../utils/translatePositionText.js");
 
 module.exports = {
   data: new SlashCommandBuilder()
-    .setName("peak")
+    .setName("pico")
     .setDescription("Reivindica uma spot no Secret Peak")
     .addStringOption((option) =>
       option
@@ -56,16 +56,32 @@ module.exports = {
       const floor = interaction.options.getString("floor");
       const position = interaction.options.getString("position");
       const tickets = interaction.options.getString("tickets");
-
       const client = interaction.client;
       const guild = client.guilds.cache.get("903985002650411049");
       const channel = guild.channels.cache.get("903985002650411052");
       const member = interaction.member;
+      const date = Date.now();
+      const user = client.users.cache.find(
+        (u) => u.tag === `${interaction.user.tag}`
+      );
+      let allPlayersQueue = JSON.parse(
+        fs.readFileSync("./src/players-on-queue.json")
+      );
       let formattedPosition = translatePositionText(position);
 
+      const findPlayer = allPlayersQueue.find(
+        (player) => player.id === user.id
+      );
       translatePositionText(position);
 
-      const date = Date.now();
+      if (findPlayer) {
+        await interaction.reply({
+          content: `:no_entry_sign: <@${user.id}> você já esta numa fila!`,
+          ephemeral: true,
+        });
+        return;
+      }
+
       let queue;
       queue = JSON.parse(
         fs.readFileSync(
@@ -77,11 +93,12 @@ module.exports = {
       let startedAt = date;
       let endsAt = startedAt;
       let timeToEnter;
-      let minutesLeft;
-
-      const user = client.users.cache.find(
-        (u) => u.tag === `${interaction.user.tag}`
-      );
+      let seconds;
+      let minutes;
+      let hours;
+      let formattedDate;
+      let formattedTicket;
+      let ticketsHoursCalc;
 
       if (queue.length > 0 && queue[0].endsAt < date) {
         queue.shift();
@@ -133,16 +150,39 @@ module.exports = {
         user
       );
 
-      if (!canClaim) return;
+      if (!canClaim) {
+        return;
+      }
+
+      endsAt = calcEndTime(tickets, startedAt);
+
+      const sla01 = new Date(startedAt);
+      const sla = new Date(endsAt);
 
       if (queueDateCalc.length >= 0) {
         timeToEnter = startedAt - date;
+        ticketsInMs = endsAt - startedAt;
         minuteTimeToEnter = timeToEnter / 60000;
-        const formattedMinute = minuteTimeToEnter.toString().slice(0, 3);
-        minutesLeft = formattedMinute;
-      }
+        seconds = Math.floor(timeToEnter / 1000) % 60;
+        minutes = Math.floor((timeToEnter / (1000 * 60)) % 60);
+        hours = Math.floor((timeToEnter / (1000 * 60 * 60)) % 24);
+        hours = hours < 10 ? "0" + hours : hours;
+        minutes = minutes < 10 ? "0" + minutes : minutes;
+        seconds = seconds < 10 ? "0" + seconds : seconds;
 
-      calcEndTime(tickets, startedAt);
+        let ticketsSecCalc = Math.floor(ticketsInMs / 1000) % 60;
+        let ticketsMinCalc = Math.floor((ticketsInMs / (1000 * 60)) % 60);
+        ticketsHoursCalc = Math.floor((ticketsInMs / (1000 * 60 * 60)) % 24);
+        ticketsHoursCalc =
+          ticketsHoursCalc < 10 ? "0" + ticketsHoursCalc : ticketsHoursCalc;
+        ticketsMinCalc =
+          ticketsMinCalc < 10 ? "0" + ticketsMinCalc : ticketsMinCalc;
+        ticketsSecCalc =
+          ticketsSecCalc < 10 ? "0" + ticketsSecCalc : ticketsSecCalc;
+        formattedDate = hours + ":" + minutes + ":" + seconds;
+        formattedTicket =
+          ticketsHoursCalc + ":" + ticketsMinCalc + ":" + ticketsSecCalc;
+      }
 
       const player = {
         userName: interaction.user.username,
@@ -157,9 +197,10 @@ module.exports = {
       };
 
       const playerForAllPlayersQueue = {
+        place: "secret-peak",
         id: user.id,
         floor: floor,
-        spot: position,
+        spot: `${position}-aggressive.json`,
       };
 
       // Daqui para Baixo a fila sempre estara populada pelo player que deu o claim
@@ -170,10 +211,6 @@ module.exports = {
         JSON.stringify(queue)
       );
 
-      allPlayersQueue = JSON.parse(
-        fs.readFileSync("./src/players-on-queue.json")
-      );
-
       allPlayersQueue.push(playerForAllPlayersQueue);
       fs.writeFileSync(
         `./src/players-on-queue.json`,
@@ -181,26 +218,109 @@ module.exports = {
       );
 
       if (queue.length === 1) {
-        await interaction.reply({
-          content: `\n:white_check_mark: <@${user.id}> pegou o spot de ${formattedPosition} agressivo no ${floor} por ${tickets} minutos
-            \n:ballot_box_with_check: ${interaction.user.username}, você já pode entrar no Secret Peak!`,
-          ephemeral: true,
-        });
+        if (ticketsHoursCalc > 0) {
+          await interaction.reply({
+            content: `\n:white_check_mark: <@${
+              user.id
+            }> pegou o spot de ${formattedPosition} no ${floor} por ${formattedTicket.slice(
+              0,
+              5
+            )} horas   
+            \n:ballot_box_with_check: ${
+              interaction.user.username
+            } você já pode entrar no Secret Peak!`,
+          });
+        } else {
+          await interaction.reply({
+            content: `:white_check_mark: <@${
+              user.id
+            }> pegou o spot de ${formattedPosition} no ${floor} por ${formattedTicket.slice(
+              3,
+              8
+            )} minutos   
+          \n:ballot_box_with_check: ${
+            interaction.user.username
+          } você já pode entrar na Secret Peak!`,
+          });
+        }
       }
-
       if (queue.length > 1) {
         let result = timeToEnter - 300000;
-        await interaction.reply({
-          content: `:white_check_mark: <@${user.id}> pegou o spot de ${formattedPosition} no ${floor} por ${tickets} minutos
-              \n:stopwatch: Sua vez é em ${minutesLeft} minutos, esteja pronto!`,
-        });
+        if (minutes + hours > 0) {
+          if (ticketsHoursCalc > 0) {
+            await interaction.reply({
+              content: `:white_check_mark: <@${
+                user.id
+              }> pegou o spot de ${formattedPosition} no ${floor} por ${formattedTicket.slice(
+                0,
+                5
+              )} horas   
+              \n:stopwatch: Sua vez é em ${formattedDate.slice(
+                3,
+                8
+              )} minutos, esteja pronto!`,
+              ephemeral: true,
+            });
+          } else {
+            await interaction.reply({
+              content: `:white_check_mark: <@${
+                user.id
+              }> pegou o spot de ${formattedPosition} no ${floor} por ${formattedTicket.slice(
+                3,
+                8
+              )} minutos   
+              \n:stopwatch: Sua vez é em ${formattedDate.slice(
+                3,
+                8
+              )} minutos, esteja pronto!`,
+              ephemeral: true,
+            });
+          }
 
-        setTimeout(() => {
-          channel.send({
-            content: `\n:rotating_light: <@${user.id}>, esteja pronto! Em 5 minutos você poderá entrar no Secret Peak!`,
-            ephemeral: true,
-          });
-        }, result);
+          setTimeout(() => {
+            channel.send({
+              content: `\n:rotating_light: <@${user.id}>, esteja pronto! Em 5 minutos você poderá entrar na Secret Peak!`,
+              ephemeral: true,
+            });
+          }, result);
+        } else {
+          if (ticketsHoursCalc > 0) {
+            await interaction.reply({
+              content: `:white_check_mark: <@${
+                user.id
+              }> pegou o spot de ${formattedPosition} no ${floor} por ${formattedTicket.slice(
+                0,
+                5
+              )} horas   
+              \n:stopwatch: Sua vez é em ${formattedDate.slice(
+                3,
+                8
+              )} segundos, esteja pronto!`,
+              ephemeral: true,
+            });
+          } else {
+            await interaction.reply({
+              content: `:white_check_mark: <@${
+                user.id
+              }> pegou o spot de ${formattedPosition} ${chamberNumber} no ${floor} por ${formattedTicket.slice(
+                3,
+                8
+              )} minutos   
+              \n:stopwatch: Sua vez é em ${formattedDate.slice(
+                3,
+                8
+              )} segundos, esteja pronto!`,
+              ephemeral: true,
+            });
+          }
+
+          setTimeout(() => {
+            channel.send({
+              content: `\n:rotating_light: <@${user.id}>, esteja pronto! Em 5 minutos você poderá entrar na Secret Peak!`,
+              ephemeral: true,
+            });
+          }, result);
+        }
       }
 
       const queueExit = endsAt - date;

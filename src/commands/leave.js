@@ -11,26 +11,35 @@ module.exports = {
       const user = client.users.cache.find(
         (u) => u.tag === `${interaction.user.tag}`
       );
-      const queue = JSON.parse(
-        fs.readFileSync("./src/magic-square/players-on-queue.json")
-      );
-      if (queue.length === 0) return;
+      const queue = JSON.parse(fs.readFileSync("./src/players-on-queue.json"));
+
+      let place;
+
+      if (queue.length === 0) {
+        await interaction.reply({
+          content: ":no_entry_sign: Não ha ninguem em nenhuma fila",
+          ephemeral: true,
+        });
+        return;
+      }
 
       const removeFromQueue = async () => {
         const findPlayer = queue.find((player) => player.id === user.id);
         const allPlayersQueueIds = queue.map((player) => player.id);
+        const place = findPlayer.place;
+        const floor = findPlayer.floor;
+        const spot = findPlayer.spot;
 
         if (!findPlayer) {
-          await interaction.reply(
-            `:no_entry_sign: <@${user.id}> você não está em nenhuma fila! :no_entry_sign:`
-          );
+          await interaction.reply({
+            content: `:no_entry_sign: <@${user.id}> você não está em nenhuma fila! :no_entry_sign:`,
+            ephemeral: true,
+          });
           return;
         }
 
         queueOfPlayer = JSON.parse(
-          fs.readFileSync(
-            `./src/magic-square/${findPlayer.floor}/${findPlayer.spot}`
-          )
+          fs.readFileSync(`./src/${place}/${floor}/${spot}`)
         );
 
         const arrayOfPlayersId = queueOfPlayer.map((player) => player.id);
@@ -43,17 +52,15 @@ module.exports = {
         const newAllPlayersQueue = queue.splice(indexOffAllPlayersQueue, 1);
 
         fs.writeFileSync(
-          `./src/magic-square/${findPlayer.floor}/${findPlayer.spot}`,
+          `./src/${place}/${findPlayer.floor}/${findPlayer.spot}`,
           JSON.stringify(queueOfPlayer)
         );
-        fs.writeFileSync(
-          `./src/magic-square/players-on-queue.json`,
-          JSON.stringify(queue)
-        );
+        fs.writeFileSync(`./src/players-on-queue.json`, JSON.stringify(queue));
 
-        await interaction.reply(
-          `:white_check_mark: <@${user.id}> você foi removido com sucesso da fila que estava!`
-        );
+        await interaction.reply({
+          content: `:white_check_mark: <@${user.id}> você foi removido com sucesso da fila que estava!`,
+          ephemeral: true,
+        });
       };
       removeFromQueue();
     } catch (error) {

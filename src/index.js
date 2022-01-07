@@ -1,11 +1,10 @@
 const fs = require("fs");
 const { Client, Intents, Collection } = require("discord.js");
+const config = require("../config.json");
 
 const client = new Client({
   intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_MESSAGES],
 });
-
-// console.clear();
 
 require("dotenv").config();
 
@@ -23,7 +22,9 @@ for (const file of commandFiles) {
 
   client.commands.set(command.data.name, command);
 }
-
+[config.antiCrash ? "antiCrash" : null].filter(Boolean).forEach((handler) => {
+  require(`./handlers/${handler}`)(client);
+});
 // Event files iterator
 const eventFiles = fs
   .readdirSync("./src/events")
