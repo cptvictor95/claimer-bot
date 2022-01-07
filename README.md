@@ -1,6 +1,7 @@
 # Claimer Bot
 
 This is a discord bot created for organizational purposes on Mir4's Magic Square and Secret Peak spots. A user is able to claim a specific spot for leveling or resource farming for a pre-determined/limited amount of time based on the maximum number of tickets.
+
 Este é um bot de discord criado para organizar as instâncias Praça Mágica e Pico Desconhecido do Mir4. Em que usuários podem reivindicar salas e locais de up ou farm, determinados conforme as regras da guilda.
 
 ## Bot Commands / Comandos do Bot
