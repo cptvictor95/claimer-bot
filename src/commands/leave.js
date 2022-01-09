@@ -16,7 +16,7 @@ module.exports = {
 
       if (queue.length === 0) {
         await interaction.reply({
-          content: ":no_entry_sign: Não ha ninguem em nenhuma fila",
+          content: ":no_entry_sign: ",
           ephemeral: true,
         });
         return;

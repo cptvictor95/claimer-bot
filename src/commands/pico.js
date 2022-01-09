@@ -56,7 +56,7 @@ module.exports = {
   async execute(interaction) {
     try {
       if (!interaction.isCommand) return;
-      if (interaction.commandName === "peak");
+      if (interaction.commandName === "pico");
 
       const floor = interaction.options.getString("floor");
       const position = interaction.options.getString("position");
@@ -373,29 +373,27 @@ module.exports = {
 
         if (timeoutQueue.length === 0) {
           channel.send(
-            `:warning: ATUALIZAÇÃO FILA ${formattedPosition} ${floor} :warning: \nAcabou a vez de <@${user.id}>, agora a fila esta vazia! :warning:`
+            `:warning: ATUALIZAÇÃO FILA ${formattedPosition} ${floor} :warning: \nAcabou a vez de <@${user.id}>, agora a fila esta vazia!`
           );
           return;
-        } else {
-          channel.send({
-            content: `\n:ballot_box_with_check: <@${timeoutQueue[0].id}> Você já pode entrar no Secret Peak!`,
-            ephemeral: true,
-          });
-          channel.send(
-            `:warning: ATUALIZAÇÃO FILA ${formattedPosition} ${floor} :warning: \n Acabou a vez de <@${
-              user.id
-            }>, a fila agora contem 1 pessoa: \n <@${
-              timeoutQueue[0].userName
-            }>\n Começou em: ${moment
-              .tz(timeoutQueue[0].startedAt, "America/Sao_Paulo")
-              .format()
-              .slice(11, 16)} \n Acabara em: ${moment
-              .tz(timeoutQueue[0].startedAt, "America/Sao_Paulo")
-              .format()
-              .slice(11, 16)}!`
-          );
         }
-        channel.send;
+        channel.send({
+          content: `\n:ballot_box_with_check: <@${timeoutQueue[0].id}> Você já pode entrar no Secret Peak!`,
+          ephemeral: true,
+        });
+        channel.send(
+          `:warning: ATUALIZAÇÃO FILA ${formattedPosition} ${floor} :warning: \n Acabou a vez de <@${
+            user.id
+          }>, a fila agora contem 1 pessoa: \n <@${
+            timeoutQueue[0].userName
+          }>\n Começou em: ${moment
+            .tz(timeoutQueue[0].startedAt, "America/Sao_Paulo")
+            .format()
+            .slice(11, 16)} \n Acabara em: ${moment
+            .tz(timeoutQueue[0].startedAt, "America/Sao_Paulo")
+            .format()
+            .slice(11, 16)}!`
+        );
       }, queueExit);
     } catch (error) {
       await interaction.reply({

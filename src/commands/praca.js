@@ -362,7 +362,7 @@ module.exports = {
           channel.send(
             `:warning: ATUALIZAÇÃO FILA ${
               chamberName.charAt(0).toUpperCase() + chamberName.slice(1)
-            } ${chamberNumber} ${floor}} :warning: \nAcabou a vez de <@${
+            } ${chamberNumber} ${floor} :warning: \nAcabou a vez de <@${
               user.id
             }>, agora a fila esta vazia! :warning:`
           );
