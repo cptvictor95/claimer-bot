@@ -122,6 +122,16 @@ module.exports = {
       const isTierOne = userRoles.includes("75+");
       const isTierTwo = userRoles.includes("81+");
       const isTierThree = userRoles.includes("86+");
+      const anyTier = !isTierOne && !isTierTwo && !isTierThree;
+
+      if (Number(tickets) > 60 && anyTier) {
+        await interaction.reply({
+          content: `\n:no_entry_sign: <@${user.id}> você pode usar no máximo 2 tickets. :no_entry_sign:`,
+          ephemeral: true,
+        });
+
+        return;
+      }
 
       if (Number(tickets) > 60 && isTierOne) {
         await interaction.reply({
@@ -131,6 +141,7 @@ module.exports = {
 
         return;
       }
+
       if (Number(tickets) > 300 && isTierTwo) {
         await interaction.reply({
           content: `\n:no_entry_sign: <@${user.id}> você pode usar no máximo 10 tickets. :no_entry_sign:`,
