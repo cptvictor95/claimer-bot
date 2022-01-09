@@ -1,14 +1,15 @@
 {
   "name": "claimer-bot",
   "version": "1.0.0",
-  "description": "discord bot for claiming spots on mir4",
+  "description": "A discord bot for claiming spots in magic square and secret peak on Mir4.",
   "main": "index.js",
   "repository": "https://github.com/cptvictor95/claimer-bot.git",
   "author": "Victor Torres",
   "license": "MIT",
   "scripts": {
     "start": "node src/index.js",
-    "dev": "node src/index.js",
+    "dev": "NODE_ENV=dev && yarn start",
+    "prod": "NODE_ENV=prod && yarn start",
     "deploy": "node src/deploy-commands.js"
   },
   "dependencies": {
