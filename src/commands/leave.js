@@ -69,7 +69,7 @@ module.exports = {
             playerInsideQueue.spot.position
           );
           await interaction.reply(
-            `:white_check_mark: <@${user.id}> você foi removido com sucesso da fila ${floor} ${formattedSpot}>`
+            `:white_check_mark: <@${user.id}> você foi removido com sucesso da fila ${floor} ${formattedSpot}`
           );
           return;
         }
