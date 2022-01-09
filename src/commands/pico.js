@@ -3,6 +3,11 @@ const fs = require("fs");
 const { calcEndTime } = require("../utils/calcEndTime.js");
 const { checkUserCanClaim } = require("../utils/checkUserCanClaim.js");
 const { translatePositionText } = require("../utils/translatePositionText.js");
+const moment = require("moment-timezone");
+const guildId =
+  process.env.NODE_ENV === "dev"
+    ? process.env.DEV_GUILD_ID
+    : process.env.PROD_GUILD_ID;
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -57,8 +62,8 @@ module.exports = {
       const position = interaction.options.getString("position");
       const tickets = interaction.options.getString("tickets");
       const client = interaction.client;
-      const guild = client.guilds.cache.get("903985002650411049");
-      const channel = guild.channels.cache.get("903985002650411052");
+      const guild = client.guilds.cache.get(guildId);
+      const channel = interaction.channel;
       const member = interaction.member;
       const date = Date.now();
       const user = client.users.cache.find(
@@ -104,11 +109,19 @@ module.exports = {
         queue.shift();
       }
 
+      if (!channel.name.includes("pico")) {
+        await interaction.reply({
+          content: `:no_entry_sign: <@${user.id}> é necessario dar claim na sala certa :no_entry_sign:`,
+          ephemeral: true,
+        });
+        return;
+      }
+
       const userRoles = member.roles.cache.map((role) => role.name);
 
       const isTierOne = userRoles.includes("75+");
       const isTierTwo = userRoles.includes("81+");
-      const isTierThree = userRoles.includes("85+");
+      const isTierThree = userRoles.includes("86+");
 
       if (Number(tickets) > 60 && isTierOne) {
         await interaction.reply({
@@ -358,13 +371,31 @@ module.exports = {
           JSON.stringify(allPlayersQueue)
         );
 
-        if (timeoutQueue.length === 0) return;
-        else {
+        if (timeoutQueue.length === 0) {
+          channel.send(
+            `:warning: ATUALIZAÇÃO FILA ${formattedPosition} ${floor} :warning: \nAcabou a vez de <@${user.id}>, agora a fila esta vazia! :warning:`
+          );
+          return;
+        } else {
           channel.send({
             content: `\n:ballot_box_with_check: <@${timeoutQueue[0].id}> Você já pode entrar no Secret Peak!`,
             ephemeral: true,
           });
+          channel.send(
+            `:warning: ATUALIZAÇÃO FILA ${formattedPosition} ${floor} :warning: \n Acabou a vez de <@${
+              user.id
+            }>, a fila agora contem 1 pessoa: \n <@${
+              timeoutQueue[0].userName
+            }>\n Começou em: ${moment
+              .tz(timeoutQueue[0].startedAt, "America/Sao_Paulo")
+              .format()
+              .slice(11, 16)} \n Acabara em: ${moment
+              .tz(timeoutQueue[0].startedAt, "America/Sao_Paulo")
+              .format()
+              .slice(11, 16)}!`
+          );
         }
+        channel.send;
       }, queueExit);
     } catch (error) {
       await interaction.reply({

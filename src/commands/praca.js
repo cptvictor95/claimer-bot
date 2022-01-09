@@ -2,6 +2,10 @@ const { SlashCommandBuilder } = require("@discordjs/builders");
 const fs = require("fs");
 const { calcEndTime } = require("../utils/calcEndTime");
 const moment = require("moment-timezone");
+const guildId =
+  process.env.NODE_ENV === "dev"
+    ? process.env.DEV_GUILD_ID
+    : process.env.PROD_GUILD_ID;
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -64,7 +68,7 @@ module.exports = {
   async execute(interaction) {
     try {
       if (!interaction.isCommand) return;
-      if (interaction.commandName === "square");
+      if (interaction.commandName === "praca");
 
       const date = Date.now();
       const floor = interaction.options.getString("floor");
@@ -72,11 +76,13 @@ module.exports = {
       const chamberNumber = interaction.options.getString("chambernumber");
       const tickets = interaction.options.getString("tickets");
       const client = interaction.client;
-      const guild = client.guilds.cache.get("903985002650411049");
-      const channel = guild.channels.cache.get("903985002650411052");
+      const guild = client.guilds.cache.get(guildId);
+      const channel = interaction.channel;
       const user = client.users.cache.find(
         (u) => u.tag === `${interaction.user.tag}`
       );
+
+      console.log(guild.name);
 
       let allPlayersQueue = JSON.parse(
         fs.readFileSync("./src/players-on-queue.json")
@@ -87,6 +93,14 @@ module.exports = {
       let formattedDate;
       let formattedTicket;
       let ticketsHoursCalc;
+
+      if (!channel.name.includes("praca")) {
+        await interaction.reply({
+          content: `:no_entry_sign: <@${user.id}> é necessario dar claim na sala certa :no_entry_sign:`,
+          ephemeral: true,
+        });
+        return;
+      }
 
       const findPlayer = allPlayersQueue.find(
         (player) => player.id === user.id
@@ -126,7 +140,7 @@ module.exports = {
 
       if (queue.length > 0 && date <= queue[0].endsAt - 300000) {
         await interaction.reply(
-          `\n:no_entry_sign: <@${user.id}> Você ainda não pode dar claim aqui, deve faltar 5 minutos para acabar a vez do primeiro da fila. :no_entry_sign:`
+          `\n:no_entry_sign: <@${user.id}> Você ainda não pode dar claim aqui, deve faltar 5 minutos para acabar a vez do player que esta farmando no momento. :no_entry_sign:`
         );
         return;
       }
@@ -229,6 +243,7 @@ module.exports = {
           });
         }
       }
+
       if (queue.length > 1) {
         let result = timeToEnter - 300000;
         if (minutes + hours > 0) {
@@ -343,12 +358,35 @@ module.exports = {
           JSON.stringify(allPlayersQueue)
         );
 
-        if (timeoutQueue.length === 0) return;
-        else {
+        if (timeoutQueue.length === 0) {
+          channel.send(
+            `:warning: ATUALIZAÇÃO FILA ${
+              chamberName.charAt(0).toUpperCase() + chamberName.slice(1)
+            } ${chamberNumber} ${floor}} :warning: \nAcabou a vez de <@${
+              user.id
+            }>, agora a fila esta vazia! :warning:`
+          );
+          return;
+        } else {
           channel.send({
             content: `\n:ballot_box_with_check: <@${timeoutQueue[0].id}>, Você está liberado! Entre na Magic Square!`,
             ephemeral: true,
           });
+          channel.send(
+            `:warning: ATUALIZAÇÃO FILA ${
+              chamberName.charAt(0).toUpperCase() + chamberName.slice(1)
+            } ${chamberNumber} ${floor} :warning:\n Acabou a vez de <@${
+              user.id
+            }>, a fila agora contem 1 pessoa:\n <@${
+              timeoutQueue[0].userName
+            }>\n Começou em: ${moment
+              .tz(timeoutQueue[0].startedAt, "America/Sao_Paulo")
+              .format()
+              .slice(11, 16)} \n Acabara em: ${moment
+              .tz(timeoutQueue[0].startedAt, "America/Sao_Paulo")
+              .format()
+              .slice(11, 16)}!`
+          );
         }
       }, queueExit);
     } catch (error) {

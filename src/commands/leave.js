@@ -1,5 +1,6 @@
 const { SlashCommandBuilder } = require("@discordjs/builders");
 const fs = require("fs");
+const { translatePositionText } = require("../utils/translatePositionText");
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -13,8 +14,6 @@ module.exports = {
       );
       const queue = JSON.parse(fs.readFileSync("./src/players-on-queue.json"));
 
-      let place;
-
       if (queue.length === 0) {
         await interaction.reply({
           content: ":no_entry_sign: Não ha ninguem em nenhuma fila",
@@ -25,10 +24,6 @@ module.exports = {
 
       const removeFromQueue = async () => {
         const findPlayer = queue.find((player) => player.id === user.id);
-        const allPlayersQueueIds = queue.map((player) => player.id);
-        const place = findPlayer.place;
-        const floor = findPlayer.floor;
-        const spot = findPlayer.spot;
 
         if (!findPlayer) {
           await interaction.reply({
@@ -38,8 +33,19 @@ module.exports = {
           return;
         }
 
+        const allPlayersQueueIds = queue.map((player) => player.id);
+        const place = findPlayer.place;
+        const floor = findPlayer.floor;
+        let spot = findPlayer.spot;
+        let formattedSpot;
+        let queueOfPlayer;
+
         queueOfPlayer = JSON.parse(
-          fs.readFileSync(`./src/${place}/${floor}/${spot}`)
+          fs.readFileSync(`./src/${place}/${findPlayer.floor}/${spot}`)
+        );
+
+        const playerInsideQueue = queueOfPlayer.find(
+          (player) => player.id === user.id
         );
 
         const arrayOfPlayersId = queueOfPlayer.map((player) => player.id);
@@ -55,12 +61,43 @@ module.exports = {
           `./src/${place}/${findPlayer.floor}/${findPlayer.spot}`,
           JSON.stringify(queueOfPlayer)
         );
+
         fs.writeFileSync(`./src/players-on-queue.json`, JSON.stringify(queue));
 
+        if (!playerInsideQueue.spot.name) {
+          formattedSpot = translatePositionText(
+            playerInsideQueue.spot.position
+          );
+          await interaction.reply(
+            `:white_check_mark: <@${user.id} você foi removido com sucesso da fila ${floor} ${formattedSpot}>`
+          );
+          return;
+        }
+
+        switch (playerInsideQueue.spot.name) {
+          case "gold":
+            formattedSpot = "Gold Chamber";
+            break;
+          case "experience":
+            formattedSpot = "Experience Chamber";
+            break;
+          case "training":
+            formattedSpot = "Training Chamber";
+            break;
+          case "white-silver":
+            formattedSpot = "White Silver Chamber";
+            break;
+          case "magic-stone":
+            formattedSpot = "Magic Stone Chamber";
+            break;
+          default:
+            break;
+        }
         await interaction.reply({
-          content: `:white_check_mark: <@${user.id}> você foi removido com sucesso da fila que estava!`,
+          content: `:white_check_mark: <@${user.id}> você foi removido com sucesso da fila ${floor} ${formattedSpot}!`,
           ephemeral: true,
         });
+        return;
       };
       removeFromQueue();
     } catch (error) {
