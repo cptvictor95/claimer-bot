@@ -31,7 +31,7 @@ module.exports = {
       const floor = interaction.options.getString("floor");
       const position = interaction.options.getString("position");
       const client = interaction.client;
-      const guild = client.guilds.cache.get("903985002650411049");
+      const guild = client.guilds.cache.get("929493313927647303");
 
       const queueFile = JSON.parse(
         fs.readFileSync(
