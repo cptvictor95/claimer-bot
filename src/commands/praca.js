@@ -186,7 +186,6 @@ module.exports = {
           ticketsHoursCalc + ":" + ticketsMinCalc + ":" + ticketsSecCalc;
       }
       //-----//
-      endsAt = date + 5000;
 
       const player = {
         userName: interaction.user.username,
