@@ -102,7 +102,7 @@ module.exports = {
       let formattedTicket;
       let ticketsHoursCalc;
 
-      if (!channel.name.includes("praca")) {
+      if (!channel.name.includes(`${floor.toLowerCase()}-claim-praca`)) {
         await interaction.reply({
           content: `:no_entry_sign: <@${user.id}> é necessario dar claim na sala certa :no_entry_sign:`,
           ephemeral: true,
