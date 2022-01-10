@@ -7,7 +7,7 @@
   "author": "Victor Torres",
   "license": "MIT",
   "scripts": {
-    "start": "node src/index.js",
+    "start": "yarn deploy && node src/index.js",
     "dev": "set NODE_ENV=dev && yarn deploy && yarn start",
     "prod": "set NODE_ENV=prod && yarn deploy && yarn start",
     "deploy": "node src/deploy-commands.js"
