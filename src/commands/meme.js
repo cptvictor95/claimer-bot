@@ -41,6 +41,7 @@ module.exports = {
       const embed = new MessageEmbed().setImage(`attachment://${attachment}`);
 
       await interaction.reply({
+        content: ":arrow_down: Claimer-bot bota a redz pra mamar :arrow_down:",
         files: [attachment],
       });
     } catch (error) {

@@ -109,7 +109,7 @@ module.exports = {
         queue.shift();
       }
 
-      if (!channel.name.includes("pico")) {
+      if (!channel.name.includes("2f-spot-agressivo")) {
         await interaction.reply({
           content: `:no_entry_sign: <@${user.id}> é necessario dar claim na sala certa :no_entry_sign:`,
           ephemeral: true,
