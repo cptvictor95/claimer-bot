@@ -57,12 +57,12 @@ module.exports = {
         );
         const newAllPlayersQueue = queue.splice(indexOffAllPlayersQueue, 1);
 
+        fs.writeFileSync(`./src/players-on-queue.json`, JSON.stringify(queue));
+
         fs.writeFileSync(
           `./src/${place}/${findPlayer.floor}/${findPlayer.spot}`,
           JSON.stringify(queueOfPlayer)
         );
-
-        fs.writeFileSync(`./src/players-on-queue.json`, JSON.stringify(queue));
 
         if (!playerInsideQueue.spot.name) {
           formattedSpot = translatePositionText(
@@ -95,8 +95,12 @@ module.exports = {
         }
 
         await interaction.reply({
-          content: `:white_check_mark: <@${user.id}> você foi removido com sucesso da fila ${floor} ${formattedSpot}!`,
-          ephemeral: true,
+          content: `:white_check_mark: <@${
+            user.id
+          }> você foi removido com sucesso da fila ${floor} ${formattedSpot} ${
+            playerInsideQueue.spot.position.charAt(0).toUpperCase() +
+            playerInsideQueue.spot.position.slice(1)
+          }!`,
         });
         return;
       };

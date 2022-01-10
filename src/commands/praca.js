@@ -64,6 +64,15 @@ module.exports = {
         .addChoice("14", "420")
         .addChoice("15", "450")
         .addChoice("16", "480")
+    )
+    .addStringOption((option) =>
+      option
+        .setName("position")
+        .setDescription("Escolhe entre a chamber do Meio Esquerda ou Direita")
+        .setRequired(true)
+        .addChoice("Esquerda", "left")
+        .addChoice("Meio", "middle")
+        .addChoice("Direita", "right")
     ),
   async execute(interaction) {
     try {
@@ -75,14 +84,13 @@ module.exports = {
       const chamberName = interaction.options.getString("chambername");
       const chamberNumber = interaction.options.getString("chambernumber");
       const tickets = interaction.options.getString("tickets");
+      const position = interaction.options.getString("position");
       const client = interaction.client;
       const guild = client.guilds.cache.get(guildId);
       const channel = interaction.channel;
       const user = client.users.cache.find(
         (u) => u.tag === `${interaction.user.tag}`
       );
-
-      console.log(guild.name);
 
       let allPlayersQueue = JSON.parse(
         fs.readFileSync("./src/players-on-queue.json")
@@ -113,7 +121,8 @@ module.exports = {
         return;
       }
 
-      const formattedChamber = `${chamberName}-${chamberNumber}.json`;
+      const formattedChamber = `${chamberName}-${chamberNumber}-${position}.json`;
+
       let queue;
       queue = JSON.parse(
         fs.readFileSync(`./src/magic-square/${floor}/${formattedChamber}`)
@@ -177,6 +186,7 @@ module.exports = {
           ticketsHoursCalc + ":" + ticketsMinCalc + ":" + ticketsSecCalc;
       }
       //-----//
+      endsAt = date + 5000;
 
       const player = {
         userName: interaction.user.username,
@@ -185,6 +195,7 @@ module.exports = {
           floor: floor,
           name: chamberName,
           number: chamberNumber,
+          position: position,
           tickets: tickets,
         },
         startedAt: startedAt,
@@ -221,10 +232,9 @@ module.exports = {
           await interaction.reply({
             content: `\n:white_check_mark: <@${user.id}> pegou o spot ${
               chamberName.charAt(0).toUpperCase() + chamberName.slice(1)
-            } ${chamberNumber} no ${floor} por ${formattedTicket.slice(
-              0,
-              5
-            )} horas   
+            } ${chamberNumber} ${
+              position.charAt(0).toUpperCase() + position.slice(1)
+            } no ${floor} por ${formattedTicket.slice(0, 5)} horas   
             \n:ballot_box_with_check: ${
               interaction.user.username
             } você já pode entrar na Magic Square!`,
@@ -233,10 +243,9 @@ module.exports = {
           await interaction.reply({
             content: `:white_check_mark: <@${user.id}> pegou o spot ${
               chamberName.charAt(0).toUpperCase() + chamberName.slice(1)
-            } ${chamberNumber} no ${floor} por ${formattedTicket.slice(
-              3,
-              8
-            )} minutos   
+            } ${chamberNumber} ${
+              position.charAt(0).toUpperCase() + position.slice(1)
+            } no ${floor} por ${formattedTicket.slice(3, 8)} minutos   
           \n:ballot_box_with_check: ${
             interaction.user.username
           } você já pode entrar na Magic Square!`,
@@ -250,8 +259,12 @@ module.exports = {
           if (ticketsHoursCalc > 0) {
             await interaction.reply({
               content: `:white_check_mark: <@${user.id}> pegou o spot ${
+                position.charAt
+              }${
                 chamberName.charAt(0).toUpperCase() + chamberName.slice(1)
-              } ${chamberNumber} no ${floor} por ${formattedTicket.slice(
+              } ${chamberNumber} ${position
+                .charAt(0)
+                .toUpperCase()} no ${floor} por ${formattedTicket.slice(
                 0,
                 5
               )} horas   
@@ -265,7 +278,9 @@ module.exports = {
             await interaction.reply({
               content: `:white_check_mark: <@${user.id}> pegou o spot ${
                 chamberName.charAt(0).toUpperCase() + chamberName.slice(1)
-              } ${chamberNumber} no ${floor} por ${formattedTicket.slice(
+              } ${chamberNumber} ${position
+                .charAt(0)
+                .toUpperCase()} no ${floor} por ${formattedTicket.slice(
                 3,
                 8
               )} minutos   
@@ -288,7 +303,9 @@ module.exports = {
             await interaction.reply({
               content: `:white_check_mark: <@${user.id}> pegou o spot ${
                 chamberName.charAt(0).toUpperCase() + chamberName.slice(1)
-              } ${chamberNumber} no ${floor} por ${formattedTicket.slice(
+              } ${chamberNumber} ${position
+                .charAt(0)
+                .toUpperCase()} no ${floor} por ${formattedTicket.slice(
                 0,
                 5
               )} horas   
@@ -302,7 +319,9 @@ module.exports = {
             await interaction.reply({
               content: `:white_check_mark: <@${user.id}> pegou o spot ${
                 chamberName.charAt(0).toUpperCase() + chamberName.slice(1)
-              } ${chamberNumber} no ${floor} por ${formattedTicket.slice(
+              } ${chamberNumber} ${position
+                .charAt(0)
+                .toUpperCase()} no ${floor} por ${formattedTicket.slice(
                 3,
                 8
               )} minutos   
@@ -360,9 +379,11 @@ module.exports = {
 
         if (timeoutQueue.length === 0) {
           channel.send(
-            `:warning: ATUALIZAÇÃO FILA ${
+            `:warning: ATUALIZAÇÃO FILA :warning:\n\n :arrow_right: ${
               chamberName.charAt(0).toUpperCase() + chamberName.slice(1)
-            } ${chamberNumber} ${floor} :warning: \nAcabou a vez de <@${
+            } ${chamberNumber} -- ${floor} -- ${
+              position.charAt(0).toUpperCase() + position.slice(1)
+            } :arrow_left:\n\n Acabou a vez de <@${
               user.id
             }>, agora a fila esta vazia! :warning:`
           );
@@ -373,9 +394,11 @@ module.exports = {
             ephemeral: true,
           });
           channel.send(
-            `:warning: ATUALIZAÇÃO FILA ${
+            `:warning: ATUALIZAÇÃO FILA :warning:\n\n :arrow_right: ${
               chamberName.charAt(0).toUpperCase() + chamberName.slice(1)
-            } ${chamberNumber} ${floor} :warning:\n Acabou a vez de <@${
+            } ${chamberNumber} -- ${floor} -- ${
+              position.charAt(0).toUpperCase() + position.slice(1)
+            }\n\n Acabou a vez de <@${
               user.id
             }>, a fila agora contem 1 pessoa:\n <@${
               timeoutQueue[0].userName
