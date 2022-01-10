@@ -11,7 +11,7 @@ module.exports = {
     if (queue.length === 0) return true;
     if (date <= queue[0].endsAt - 1500000) {
       await interaction.reply(
-        `\n:no_entry_sign: <@${user.id}> Já existe alguém nessa fila. :no_entry_sign:`
+        `\n:no_entry_sign: <@${user.id}> Você não pode claimar aqui! Faltam mais de 25 minutos para acabar o tempo da pessoa que esta farmando! :no_entry_sign:`
       );
       return false;
     }
