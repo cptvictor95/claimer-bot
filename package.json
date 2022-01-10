@@ -8,8 +8,8 @@
   "license": "MIT",
   "scripts": {
     "start": "yarn deploy && node src/index.js",
-    "dev": "set NODE_ENV=dev && yarn deploy && yarn start",
-    "prod": "set NODE_ENV=prod && yarn deploy && yarn start",
+    "dev": "set NODE_ENV=dev && yarn start",
+    "prod": "set NODE_ENV=prod && yarn start",
     "deploy": "node src/deploy-commands.js"
   },
   "dependencies": {
