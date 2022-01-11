@@ -12,6 +12,7 @@ module.exports = {
       const user = client.users.cache.find(
         (u) => u.tag === `${interaction.user.tag}`
       );
+      
       const queue = JSON.parse(fs.readFileSync("./src/players-on-queue.json"));
 
       if (queue.length === 0) {

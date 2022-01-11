@@ -91,6 +91,8 @@ module.exports = {
       const user = client.users.cache.find(
         (u) => u.tag === `${interaction.user.tag}`
       );
+      const userRoles = interaction.member.roles.cache.map((role) => role.name);
+      const hasClaimManager = userRoles.includes("claim manager");
 
       let allPlayersQueue = JSON.parse(
         fs.readFileSync("./src/players-on-queue.json")
@@ -114,7 +116,7 @@ module.exports = {
         (player) => player.id === user.id
       );
 
-      if (findPlayer) {
+      if (findPlayer && !hasClaimManager) {
         await interaction.reply({
           content: `:no_entry_sign: <@${user.id}> você já esta numa fila!`,
           ephemeral: true,
@@ -149,9 +151,10 @@ module.exports = {
       }
 
       if (queue.length > 0 && date <= queue[0].endsAt - 300000) {
-        await interaction.reply(
-          `\n:no_entry_sign: <@${user.id}> Você ainda não pode dar claim aqui, deve faltar 5 minutos para acabar a vez do player que esta farmando no momento. :no_entry_sign:`
-        );
+        await interaction.reply({
+          content: `\n:no_entry_sign: <@${user.id}> Você ainda não pode dar claim aqui, deve faltar 5 minutos para acabar a vez do player que esta farmando no momento. :no_entry_sign:`,
+          ephemeral: true,
+        });
         return;
       }
 
