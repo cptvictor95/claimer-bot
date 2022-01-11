@@ -88,6 +88,7 @@ module.exports = {
       const floor = interaction.options.getString("floor");
       const chamberName = interaction.options.getString("chambername");
       const chamberNumber = interaction.options.getString("chambernumber");
+      const position = interaction.options.getString("position");
       const formattedChamber = `${chamberName}-${chamberNumber}-${position}.json`;
 
       const queueFile = JSON.parse(
