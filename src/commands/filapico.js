@@ -70,7 +70,8 @@ module.exports = {
       if (queueFile.length == 0) {
         await interaction.reply({
           ephemeral: true,
-          content: ":loudspeaker:  Não há ninguem nesta fila",
+          content:
+            ":loudspeaker:  Não há ninguem nesta fila\n ------------------",
         });
         return;
       }
@@ -85,7 +86,7 @@ module.exports = {
             .slice(11, 16)}\n Termino: ${moment
             .tz(queueFile[0].endsAt, "America/Sao_Paulo")
             .format()
-            .slice(11, 16)}`,
+            .slice(11, 16)}\n ------------------`,
         });
       }
       if (queueFile.length == 2) {
@@ -107,7 +108,7 @@ module.exports = {
             .slice(11, 16)}\n Termino: ${moment
             .tz(queueFile[1].endsAt, "America/Sao_Paulo")
             .format()
-            .slice(11, 16)}`,
+            .slice(11, 16)}\n ------------------`,
         });
       }
     } catch (error) {
