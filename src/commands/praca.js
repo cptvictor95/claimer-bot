@@ -349,20 +349,14 @@ module.exports = {
 
       setTimeout(() => {
         //Verifica se o usuaria ainda esta na fila (pois pode ja ter usado um leave)
-        const checkPlayerInQueue = () => {
-          const allPlayersOnQueue = JSON.parse(
-            fs.readFileSync("./src/players-on-queue.json")
-          );
-          const check = allPlayersOnQueue.map(
-            (player) => player.id === user.id
-          );
+        const allPlayersOnQueue = JSON.parse(
+          fs.readFileSync("./src/players-on-queue.json")
+        );
+        const check = allPlayersOnQueue.find((player) => player.id === user.id);
 
-          return check;
-        };
-
-        const check = checkPlayerInQueue();
-
-        if (!check) return;
+        if (!check) {
+          return;
+        }
         //-----//
 
         let timeoutQueue = JSON.parse(
