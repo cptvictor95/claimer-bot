@@ -347,20 +347,14 @@ module.exports = {
       const queueExit = endsAt - date;
 
       setTimeout(() => {
-        const checkPlayerInQueue = () => {
-          const allPlayersOnQueue = JSON.parse(
-            fs.readFileSync("./src/players-on-queue.json")
-          );
-          const check = allPlayersOnQueue.map(
-            (player) => player.id === user.id
-          );
+        const allPlayersOnQueue = JSON.parse(
+          fs.readFileSync("./src/players-on-queue.json")
+        );
+        const check = allPlayersOnQueue.map((player) => player.id === user.id);
 
-          return check;
-        };
-
-        const check = checkPlayerInQueue();
-
-        if (!check) return;
+        if (!check) {
+          return;
+        }
 
         let timeoutQueue = JSON.parse(
           fs.readFileSync(
