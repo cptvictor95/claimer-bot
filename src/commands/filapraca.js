@@ -72,6 +72,15 @@ module.exports = {
         .addChoice("Chamber I", "1")
         .addChoice("Chamber II", "2")
         .addChoice("Chamber III", "3")
+    )
+    .addStringOption((option) =>
+      option
+        .setName("position")
+        .setDescription("Escolha entre Esquerda - Meio ou Direita")
+        .setRequired(true)
+        .addChoice("Esquerda", "left")
+        .addChoice("Meio", "middle")
+        .addChoice("Right", "right")
     ),
 
   async execute(interaction) {
@@ -79,10 +88,12 @@ module.exports = {
       const floor = interaction.options.getString("floor");
       const chamberName = interaction.options.getString("chambername");
       const chamberNumber = interaction.options.getString("chambernumber");
-      const formattedChamber = `${chamberName}-${chamberNumber}.json`;
+      const formattedChamber = `${chamberName}-${chamberNumber}-${position}.json`;
+
       const queueFile = JSON.parse(
         fs.readFileSync(`./src/magic-square/${floor}/${formattedChamber}`)
       );
+
       let uiChamberName;
       let uiChamberNumber;
 
@@ -109,6 +120,7 @@ module.exports = {
         default:
           break;
       }
+
       if (chamberNumber === "1") {
         uiChamberNumber = "I";
       }
@@ -132,10 +144,12 @@ module.exports = {
       if (queueFile.length == 0) {
         await interaction.reply({
           ephemeral: true,
-          content: ":loudspeaker:  Não há ninguem nesta fila",
+          content:
+            ":loudspeaker:  Não há ninguem nesta fila\n ------------------",
         });
         return;
       }
+
       if (queueFile.length == 1) {
         await interaction.reply({
           ephemeral: true,
@@ -147,9 +161,10 @@ module.exports = {
             .slice(11, 16)}\n Termino: ${moment
             .tz(queueFile[0].endsAt, "America/Sao_Paulo")
             .format()
-            .slice(11, 16)}`,
+            .slice(11, 16)}\n ------------------`,
         });
       }
+
       if (queueFile.length == 2) {
         await interaction.reply({
           ephemeral: true,
@@ -169,7 +184,7 @@ module.exports = {
             .slice(11, 16)}\n Termino: ${moment
             .tz(queueFile[1].endsAt, "America/Sao_Paulo")
             .format()
-            .slice(11, 16)}`,
+            .slice(11, 16)}\n ------------------`,
         });
       }
       //       await interaction.followUp({

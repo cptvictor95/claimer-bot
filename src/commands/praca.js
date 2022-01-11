@@ -113,6 +113,7 @@ module.exports = {
       const findPlayer = allPlayersQueue.find(
         (player) => player.id === user.id
       );
+
       if (findPlayer) {
         await interaction.reply({
           content: `:no_entry_sign: <@${user.id}> você já esta numa fila!`,
@@ -159,6 +160,7 @@ module.exports = {
         const endsAt01 = queueDateCalc[0].endsAt;
         startedAt = endsAt01;
       }
+
       endsAt = calcEndTime(tickets, startedAt);
 
       if (queueDateCalc.length >= 0) {
@@ -186,7 +188,6 @@ module.exports = {
           ticketsHoursCalc + ":" + ticketsMinCalc + ":" + ticketsSecCalc;
       }
       //-----//
-
       const player = {
         userName: interaction.user.username,
         id: user.id,
@@ -236,7 +237,7 @@ module.exports = {
             } no ${floor} por ${formattedTicket.slice(0, 5)} horas   
             \n:ballot_box_with_check: ${
               interaction.user.username
-            } você já pode entrar na Magic Square!`,
+            } você já pode entrar na Magic Square!\n ------------------`,
           });
         } else {
           await interaction.reply({
@@ -247,7 +248,7 @@ module.exports = {
             } no ${floor} por ${formattedTicket.slice(3, 8)} minutos   
           \n:ballot_box_with_check: ${
             interaction.user.username
-          } você já pode entrar na Magic Square!`,
+          } você já pode entrar na Magic Square!\n ------------------`,
           });
         }
       }
@@ -270,7 +271,7 @@ module.exports = {
               \n:stopwatch: Sua vez é em ${formattedDate.slice(
                 3,
                 8
-              )} minutos, esteja pronto!`,
+              )} minutos, esteja pronto!\n ------------------`,
               ephemeral: true,
             });
           } else {
@@ -286,14 +287,14 @@ module.exports = {
               \n:stopwatch: Sua vez é em ${formattedDate.slice(
                 3,
                 8
-              )} minutos, esteja pronto!`,
+              )} minutos, esteja pronto!\n ------------------`,
               ephemeral: true,
             });
           }
 
           setTimeout(() => {
             channel.send({
-              content: `\n:rotating_light: <@${user.id}>, esteja pronto! Em 5 minutos você poderá entrar na Magic Square!`,
+              content: `\n:rotating_light: <@${user.id}>, esteja pronto! Em 5 minutos você poderá entrar na Magic Square!\n ------------------`,
               ephemeral: true,
             });
           }, result);
@@ -311,7 +312,7 @@ module.exports = {
               \n:stopwatch: Sua vez é em ${formattedDate.slice(
                 3,
                 8
-              )} segundos, esteja pronto!`,
+              )} segundos, esteja pronto!\n ------------------`,
               ephemeral: true,
             });
           } else {
@@ -327,14 +328,14 @@ module.exports = {
               \n:stopwatch: Sua vez é em ${formattedDate.slice(
                 3,
                 8
-              )} segundos, esteja pronto!`,
+              )} segundos, esteja pronto!\n ------------------`,
               ephemeral: true,
             });
           }
 
           setTimeout(() => {
             channel.send({
-              content: `\n:rotating_light: <@${user.id}>, esteja pronto! Em 5 minutos você poderá entrar na Magic Square!`,
+              content: `\n:rotating_light: <@${user.id}>, esteja pronto! Em 5 minutos você poderá entrar na Magic Square!\n ------------------`,
               ephemeral: true,
             });
           }, result);
@@ -356,9 +357,9 @@ module.exports = {
           return check;
         };
 
-        checkPlayerInQueue();
+        const check = checkPlayerInQueue();
 
-        if (!checkPlayerInQueue) return;
+        if (!check) return;
         //-----//
 
         let timeoutQueue = JSON.parse(
@@ -384,12 +385,12 @@ module.exports = {
               position.charAt(0).toUpperCase() + position.slice(1)
             } :arrow_left:\n\n Acabou a vez de <@${
               user.id
-            }>, agora a fila esta vazia! :warning:`
+            }>, agora a fila esta vazia! :warning:\n ------------------`
           );
           return;
         } else {
           channel.send({
-            content: `\n:ballot_box_with_check: <@${timeoutQueue[0].id}>, Você está liberado! Entre na Magic Square!`,
+            content: `\n:ballot_box_with_check: <@${timeoutQueue[0].id}>, Você está liberado! Entre na Magic Square!\n ------------------`,
             ephemeral: true,
           });
           channel.send(
@@ -405,9 +406,9 @@ module.exports = {
               .tz(timeoutQueue[0].startedAt, "America/Sao_Paulo")
               .format()
               .slice(11, 16)} \n Acabara em: ${moment
-              .tz(timeoutQueue[0].startedAt, "America/Sao_Paulo")
+              .tz(timeoutQueue[0].endsAt, "America/Sao_Paulo")
               .format()
-              .slice(11, 16)}!`
+              .slice(11, 16)}!\n ------------------`
           );
         }
       }, queueExit);

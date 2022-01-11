@@ -16,7 +16,7 @@ module.exports = {
 
       if (queue.length === 0) {
         await interaction.reply({
-          content: `:no_entry_sign: <@${user.id}> você não está em nenhuma fila! :no_entry_sign:`,
+          content: `:no_entry_sign: <@${user.id}> você não está em nenhuma fila! :no_entry_sign:\n ------------------`,
           ephemeral: true,
         });
         return;
@@ -27,7 +27,7 @@ module.exports = {
 
         if (!findPlayer) {
           await interaction.reply({
-            content: `:no_entry_sign: <@${user.id}> você não está em nenhuma fila! :no_entry_sign:`,
+            content: `:no_entry_sign: <@${user.id}> você não está em nenhuma fila! :no_entry_sign:\n ------------------`,
             ephemeral: true,
           });
           return;
@@ -69,7 +69,7 @@ module.exports = {
             playerInsideQueue.spot.position
           );
           await interaction.reply(
-            `:white_check_mark: <@${user.id}> você foi removido com sucesso da fila ${floor} ${formattedSpot}`
+            `:white_check_mark: <@${user.id}> você foi removido com sucesso da fila ${floor} ${formattedSpot}\n ------------------`
           );
           return;
         }
@@ -100,7 +100,7 @@ module.exports = {
           }> você foi removido com sucesso da fila ${floor} ${formattedSpot} ${
             playerInsideQueue.spot.position.charAt(0).toUpperCase() +
             playerInsideQueue.spot.position.slice(1)
-          }!`,
+          }!\n ------------------`,
         });
         return;
       };

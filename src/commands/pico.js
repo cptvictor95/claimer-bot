@@ -180,9 +180,6 @@ module.exports = {
 
       endsAt = calcEndTime(tickets, startedAt);
 
-      const sla01 = new Date(startedAt);
-      const sla = new Date(endsAt);
-
       if (queueDateCalc.length >= 0) {
         timeToEnter = startedAt - date;
         ticketsInMs = endsAt - startedAt;
@@ -252,7 +249,7 @@ module.exports = {
             )} horas   
             \n:ballot_box_with_check: ${
               interaction.user.username
-            } você já pode entrar no Secret Peak!`,
+            } você já pode entrar no Secret Peak!\n ------------------`,
           });
         } else {
           await interaction.reply({
@@ -264,7 +261,7 @@ module.exports = {
             )} minutos   
           \n:ballot_box_with_check: ${
             interaction.user.username
-          } você já pode entrar na Secret Peak!`,
+          } você já pode entrar na Secret Peak!\n ------------------`,
           });
         }
       }
@@ -282,7 +279,7 @@ module.exports = {
               \n:stopwatch: Sua vez é em ${formattedDate.slice(
                 3,
                 8
-              )} minutos, esteja pronto!`,
+              )} minutos, esteja pronto!\n ------------------`,
               ephemeral: true,
             });
           } else {
@@ -296,14 +293,14 @@ module.exports = {
               \n:stopwatch: Sua vez é em ${formattedDate.slice(
                 3,
                 8
-              )} minutos, esteja pronto!`,
+              )} minutos, esteja pronto!\n ------------------`,
               ephemeral: true,
             });
           }
 
           setTimeout(() => {
             channel.send({
-              content: `\n:rotating_light: <@${user.id}>, esteja pronto! Em 5 minutos você poderá entrar na Secret Peak!`,
+              content: `\n:rotating_light: <@${user.id}>, esteja pronto! Em 5 minutos você poderá entrar na Secret Peak!\n ------------------`,
               ephemeral: true,
             });
           }, result);
@@ -319,7 +316,7 @@ module.exports = {
               \n:stopwatch: Sua vez é em ${formattedDate.slice(
                 3,
                 8
-              )} segundos, esteja pronto!`,
+              )} segundos, esteja pronto!\n ------------------`,
               ephemeral: true,
             });
           } else {
@@ -333,14 +330,14 @@ module.exports = {
               \n:stopwatch: Sua vez é em ${formattedDate.slice(
                 3,
                 8
-              )} segundos, esteja pronto!`,
+              )} segundos, esteja pronto!\n ------------------`,
               ephemeral: true,
             });
           }
 
           setTimeout(() => {
             channel.send({
-              content: `\n:rotating_light: <@${user.id}>, esteja pronto! Em 5 minutos você poderá entrar na Secret Peak!`,
+              content: `\n:rotating_light: <@${user.id}>, esteja pronto! Em 5 minutos você poderá entrar na Secret Peak!\n ------------------`,
               ephemeral: true,
             });
           }, result);
@@ -361,9 +358,9 @@ module.exports = {
           return check;
         };
 
-        checkPlayerInQueue();
+        const check = checkPlayerInQueue();
 
-        if (!checkPlayerInQueue) return;
+        if (!check) return;
 
         let timeoutQueue = JSON.parse(
           fs.readFileSync(
@@ -384,12 +381,12 @@ module.exports = {
 
         if (timeoutQueue.length === 0) {
           channel.send(
-            `:warning: ATUALIZAÇÃO FILA ${formattedPosition} ${floor} :warning: \nAcabou a vez de <@${user.id}>, agora a fila esta vazia!`
+            `:warning: ATUALIZAÇÃO FILA ${formattedPosition} ${floor} :warning: \nAcabou a vez de <@${user.id}>, agora a fila esta vazia!\n ------------------`
           );
           return;
         }
         channel.send({
-          content: `\n:ballot_box_with_check: <@${timeoutQueue[0].id}> Você já pode entrar no Secret Peak!`,
+          content: `\n:ballot_box_with_check: <@${timeoutQueue[0].id}> Você já pode entrar no Secret Peak!\n ------------------`,
           ephemeral: true,
         });
         channel.send(
@@ -403,7 +400,7 @@ module.exports = {
             .slice(11, 16)} \n Acabara em: ${moment
             .tz(timeoutQueue[0].startedAt, "America/Sao_Paulo")
             .format()
-            .slice(11, 16)}!`
+            .slice(11, 16)}!\n ------------------`
         );
       }, queueExit);
     } catch (error) {
