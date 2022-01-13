@@ -150,7 +150,11 @@ module.exports = {
         return;
       }
 
-      if (queue.length > 0 && date <= queue[0].endsAt - 300000) {
+      if (
+        queue.length > 0 &&
+        date <= queue[0].endsAt - 300000 &&
+        !hasClaimManager
+      ) {
         await interaction.reply({
           content: `\n:no_entry_sign: <@${user.id}> Você ainda não pode dar claim aqui, deve faltar 5 minutos para acabar a vez do player que esta farmando no momento. :no_entry_sign:`,
           ephemeral: true,

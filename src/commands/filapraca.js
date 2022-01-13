@@ -99,8 +99,8 @@ module.exports = {
       let uiChamberNumber;
 
       const client = interaction.client;
-      const guild = client.guilds.cache.get("903985002650411049");
-      const channel = guild.channels.cache.get("903985002650411052");
+      const guild = interaction.guild;
+      const channel = interaction.channel;
 
       switch (chamberName) {
         case "gold":
