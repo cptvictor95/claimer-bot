@@ -7,6 +7,19 @@ const guildId =
     ? process.env.DEV_GUILD_ID
     : process.env.PROD_GUILD_ID;
 
+/* --[]Deve colocar o usuario na fila 
+   --[]Certificar que o claim não pode ser realizado antes dos 5min do prox acabar
+   --[]Certificar que o usuario ja não esta em algum fila
+   --[]Certificar a fila ja não esta cheia
+   --[]Certificar que o horario é calculado certo dependendo da posição do usuario
+   --[]Certificar que o tempo de saida corresponde ao tempo certo baseado na posição do usuario
+   --[]Certificar o envio da mensagem e seu conteudo formatado e correto
+   --[]Certificar que o envio da mensagem esta baseado na posição de quem realizou o claim
+   --[]Certificar que quando o usuario que deu claim for tirado da fila a mensagem certa baseado em como esta a fila
+   -----[]Se a fila esta vazia
+   -----[]Se a fila tem mais uma pessoa
+ */
+
 module.exports = {
   data: new SlashCommandBuilder()
     .setName("praca")
@@ -234,7 +247,7 @@ module.exports = {
 
       //-----//
 
-      if (queue.length === 1) {
+      if (queue.length === 1 && queue[0].id === user.id) {
         if (ticketsHoursCalc > 0) {
           await interaction.reply({
             content: `\n:white_check_mark: <@${user.id}> pegou o spot ${
@@ -259,8 +272,8 @@ module.exports = {
           });
         }
       }
-
-      if (queue.length > 1) {
+      //Conferir melhor essa função(RECADO)
+      if (queue.length > 1 && queue[1].id === user.id) {
         let result = timeToEnter - 300000;
         if (minutes + hours > 0) {
           if (ticketsHoursCalc > 0) {
@@ -298,8 +311,17 @@ module.exports = {
               ephemeral: true,
             });
           }
-
+          //Precisa arrumar este timeout, result provavelmente nao esta certo!(RECADO)
           setTimeout(() => {
+            const attQueue = JSON.parse(
+              fs.readFileSync(`./src/players-on-queue.json`)
+            );
+            const checkPlayer = attQueue.find(
+              (player) => player.id === user.id
+            );
+            if (!checkPlayer) {
+              return;
+            }
             channel.send({
               content: `\n:rotating_light: <@${user.id}>, esteja pronto! Em 5 minutos você poderá entrar na Magic Square!\n ------------------`,
               ephemeral: true,
@@ -339,17 +361,26 @@ module.exports = {
               ephemeral: true,
             });
           }
-
+          //Este tambem precisa ser concertado
           setTimeout(() => {
-            channel.send({
-              content: `\n:rotating_light: <@${user.id}>, esteja pronto! Em 5 minutos você poderá entrar na Magic Square!\n ------------------`,
-              ephemeral: true,
-            });
+            const secondAttQueue = JSON.parse(
+              fs.readFileSync(`./src/players-on-queue.json`)
+            );
+            const secondCheckPlayer = secondAttQueue.find(
+              (player) => player.id === user.id
+            );
+            if (secondCheckPlayer) {
+              channel.send({
+                content: `\n:rotating_light: <@${user.id}>, esteja pronto! Em 5 minutos você poderá entrar na Magic Square!\n ------------------`,
+                ephemeral: true,
+              });
+            }
           }, result);
         }
       }
 
       const queueExit = endsAt - date;
+      //conferir
 
       setTimeout(() => {
         //Verifica se o usuaria ainda esta na fila (pois pode ja ter usado um leave)
@@ -358,24 +389,33 @@ module.exports = {
         );
         const check = allPlayersOnQueue.find((player) => player.id === user.id);
 
+        let timeoutQueue = JSON.parse(
+          fs.readFileSync(`./src/magic-square/${floor}/${formattedChamber}`)
+        );
         if (!check) {
+          return;
+        }
+        if (timeoutQueue.length === 0) {
+          return;
+        }
+        if (timeoutQueue[0].id !== user.id) {
           return;
         }
         //-----//
 
-        let timeoutQueue = JSON.parse(
-          fs.readFileSync(`./src/magic-square/${floor}/${formattedChamber}`)
-        );
         eval(timeoutQueue);
         timeoutQueue.shift();
         fs.writeFileSync(
           `./src/magic-square/${floor}/${formattedChamber}`,
           JSON.stringify(timeoutQueue)
         );
-        allPlayersQueue.shift();
+        const filteredAllPlayersQueue = allPlayersQueue.filter(
+          (player) => player.id !== user.id
+        );
+
         fs.writeFileSync(
           `./src/players-on-queue.json`,
-          JSON.stringify(allPlayersQueue)
+          JSON.stringify(filteredAllPlayersQueue)
         );
 
         if (timeoutQueue.length === 0) {
