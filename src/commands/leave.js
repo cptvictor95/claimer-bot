@@ -3,6 +3,7 @@ const { channel } = require("diagnostics_channel");
 const fs = require("fs");
 const { calcEndTime } = require("../utils/calcEndTime");
 const { translatePositionText } = require("../utils/translatePositionText");
+const moment = require("moment-timezone");
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -51,21 +52,27 @@ module.exports = {
         const playerInsideQueue = queueOfPlayer.find(
           (player) => player.id === user.id
         );
-
+        
         switch (playerInsideQueue.spot.name) {
           case "gold":
-            formattedSpot = "Gold Chamber";
+            formattedSpot = `Gold Chamber ${playerInsideQueue.spot.number}`;
             break;
           case "experience":
-            formattedSpot = "Experience Chamber";
+            formattedSpot = `Experience Chamber ${playerInsideQueue.spot.number}`;
             break;
           case "magic-stone":
-            formattedSpot = "Magic Stone Chamber";
+            formattedSpot = `Magic Stone Chamber ${playerInsideQueue.spot.number}`;
             break;
           default:
             break;
         }
+        //Opções quando um usuario utiliza o comando
+        //--Nao estar em nenhuma fila(Enviar mensagem de aviso alertando o usuario)
+        //--Estar sozinho na fila(Segue o padrão de retirar das duas filas e enviar a mensagem)
+        //--Estar em primeiro da fila e com uma pessoa atras(Se isso ocorrer, a pessoa que esta atras esta a apenas 5 minutos ou menos de dif)
+        //--Estar em segundo da fila e com uma pessoa a frente(Se isso ocorrer, a pessoa da frente não é afetada e o /leave segue o padrão)
 
+        //[X]FUNCIONANDO E TESTADO 14/01
         if (queueOfPlayer.length === 1 && queueOfPlayer[0].id === user.id) {
           let soloQueue = JSON.parse(
             fs.readFileSync(`./src/${place}/${findPlayer.floor}/${spot}`)
@@ -93,7 +100,7 @@ module.exports = {
               playerInsideQueue.spot.position
             );
             await interaction.reply(
-              `:white_check_mark: <@${user.id}> você foi removido com sucesso da fila ${floor} ${formattedSpot}\n ------------------`
+              `:white_check_mark: <@${user.id}> você foi removido com sucesso da fila ${formattedSpot} -- ${floor}\n ------------------`
             );
             return;
           }
@@ -101,7 +108,7 @@ module.exports = {
           await interaction.reply({
             content: `:white_check_mark: <@${
               user.id
-            }> você foi removido com sucesso da fila ${floor} ${formattedSpot} ${
+            }> você foi removido com sucesso da fila ${formattedSpot} -- ${floor} -- ${
               playerInsideQueue.spot.position.charAt(0).toUpperCase() +
               playerInsideQueue.spot.position.slice(1)
             }!\n ------------------`,
@@ -110,6 +117,9 @@ module.exports = {
           return;
         }
 
+        //Retirar o usuario da fila
+        //Reescrever o endsAt e startedAt do proximo da fila
+        //Alem de reescrever fazer um timeout para retirar o proximo da fila e da all players-queue
         if (queueOfPlayer.length === 2 && queueOfPlayer[0].id === user.id) {
           let allPlayersteste = JSON.parse(
             fs.readFileSync(`./src/players-on-queue.json`)
@@ -117,6 +127,7 @@ module.exports = {
           let teste = JSON.parse(
             fs.readFileSync(`./src/${place}/${findPlayer.floor}/${spot}`)
           );
+
           const nextTickets = queueOfPlayer[1].spot.tickets;
           const nextFloor = queueOfPlayer[1].spot.floor;
           const nextChamberName = queueOfPlayer[1].spot.name;
@@ -159,32 +170,39 @@ module.exports = {
             JSON.stringify(filterRemove)
           );
 
-          if (!playerInsideQueue.spot.name) {
-            formattedSpot = translatePositionText(
-              playerInsideQueue.spot.position
-            );
-            await channel.send(
-              `:white_check_mark: <@${user.id}> você foi removido com sucesso da fila ${floor} ${formattedSpot}\n ------------------`
-            );
-          }
-
-          await channel.send({
-            content: `:white_check_mark: <@${
+          await interaction.reply(
+            `:white_check_mark: <@${
               user.id
-            }> você foi removido com sucesso da fila ${floor} ${formattedSpot} ${
-              playerInsideQueue.spot.position.charAt(0).toUpperCase() +
-              playerInsideQueue.spot.position.slice(1)
-            }!\n ------------------`,
+            }> você foi removido com sucesso da fila ${formattedSpot} -- ${floor} -- ${
+              nextPosition.charAt(0).toUpperCase() + nextPosition.slice(1)
+            }\n ------------------`
+          );
+          await channel.send({
+            content: `\n:ballot_box_with_check: O player que estava farmando saiu mais cedo! <@${teste[0].id}> Você já pode entrar na Magic Square!\n ------------------`,
           });
+          await channel.send(
+            `:warning: ATUALIZAÇÃO FILA :warning:\n\n :arrow_right: ${formattedSpot} -- ${floor} -- ${
+              nextPosition.charAt(0).toUpperCase() + nextPosition.slice(1)
+            }\n\nAcabou a vez de <@${
+              user.id
+            }>, a fila agora contem 1 pessoa:\n${
+              teste[0].userName
+            }\nComeçou em: ${moment
+              .tz(teste[0].startedAt, "America/Sao_Paulo")
+              .format()
+              .slice(11, 16)} \n Acabara em: ${moment
+              .tz(teste[0].endsAt, "America/Sao_Paulo")
+              .format()
+              .slice(11, 16)}!\n ------------------`
+          );
 
           //O timeout precisa retirar o proximo da fila no tempo certo(tanto na fila que ele esta tanto na players-on-queue), não retirar o proprio usuario do leave, tambem não pode usar a fila teste pois outra pessoa ja pode ter dado claim é necessario trabalhar em uma fila atualizada dentro do timeout ###RECADO PARA CODAR NA PROXIMA VEZ
           setTimeout(() => {
             let timeoutQueue = JSON.parse(
               fs.readFileSync(`./src/${place}/${floor}/${spot}`)
             );
-
             const findPlayer = timeoutQueue.find(
-              (player) => player.id === nextUserId
+              (player) => player.id === timeoutQueue[0].id
             );
 
             let allPlayersTimeoutQueue = JSON.parse(
@@ -197,7 +215,7 @@ module.exports = {
 
             if (
               timeoutQueue.length === 2 &&
-              timeoutQueue[1].id === nextUserId
+              timeoutQueue[0].id !== nextUserId
             ) {
               return;
             }
@@ -220,22 +238,21 @@ module.exports = {
 
             if (timeoutQueue.length === 0) {
               channel.send(
-                `:warning: ATUALIZAÇÃO FILA :warning:\n\n :arrow_right: ${formattedSpot} ${nextChamberNumber} -- ${floor} -- ${
+                `:warning: ATUALIZAÇÃO FILA :warning:\n\n :arrow_right: ${formattedSpot} ${floor} ${
                   nextPosition.charAt(0).toUpperCase() + nextPosition.slice(1)
-                } :arrow_left:\n\n Acabou a vez de <@${nextUserId}>, agora a fila esta vazia! :warning:\n ------------------`
+                } :arrow_left:\n\nAcabou a vez de <@${nextUserId}>, agora a fila esta vazia! :warning:\n ------------------`
               );
               return;
             } else {
               channel.send({
                 content: `\n:ballot_box_with_check: <@${timeoutQueue[0].id}>, Você está liberado! Entre na Magic Square!\n ------------------`,
-                ephemeral: true,
               });
               channel.send(
-                `:warning: ATUALIZAÇÃO FILA :warning:\n\n :arrow_right: ${formattedSpot} ${nextChamberNumber} -- ${floor} -- ${
+                `:warning: ATUALIZAÇÃO FILA :warning:\n\n :arrow_right: ${formattedSpot} ${floor} ${
                   nextPosition.charAt(0).toUpperCase() + nextPosition.slice(1)
-                }\n\n Acabou a vez de <@${nextUserId}>, a fila agora contem 1 pessoa:\n <@${
+                }\n\nAcabou a vez de <@${nextUserId}>, a fila agora contem 1 pessoa:\n${
                   timeoutQueue[0].userName
-                }>\n Começou em: ${moment
+                }\nComeçou em: ${moment
                   .tz(timeoutQueue[0].startedAt, "America/Sao_Paulo")
                   .format()
                   .slice(11, 16)} \n Acabara em: ${moment
@@ -246,6 +263,7 @@ module.exports = {
             }
           }, nextEndTime);
         }
+        //[X]FUNCIONANDO E TESTADO 14/01
         if (queueOfPlayer.length === 2 && queueOfPlayer[1].id === user.id) {
           let queue = JSON.parse(
             fs.readFileSync(`./src/${place}/${findPlayer.floor}/${spot}`)
