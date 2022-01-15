@@ -380,10 +380,12 @@ module.exports = {
       }
 
       const queueExit = endsAt - date;
+      console.log(queueExit);
       //conferir
 
       setTimeout(() => {
         //Verifica se o usuaria ainda esta na fila (pois pode ja ter usado um leave)
+        console.log("entrou");
         const allPlayersOnQueue = JSON.parse(
           fs.readFileSync("./src/players-on-queue.json")
         );
@@ -403,8 +405,7 @@ module.exports = {
         }
         //-----//
 
-        eval(timeoutQueue);
-        timeoutQueue.shift();
+        const newTimeoutQueue = timeoutQueue.shift();
         fs.writeFileSync(
           `./src/magic-square/${floor}/${formattedChamber}`,
           JSON.stringify(timeoutQueue)
