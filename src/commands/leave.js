@@ -52,7 +52,7 @@ module.exports = {
         const playerInsideQueue = queueOfPlayer.find(
           (player) => player.id === user.id
         );
-        
+
         switch (playerInsideQueue.spot.name) {
           case "gold":
             formattedSpot = `Gold Chamber ${playerInsideQueue.spot.number}`;

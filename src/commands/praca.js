@@ -150,8 +150,21 @@ module.exports = {
       let timeToEnter;
 
       //Verifica se a primeira pessoa na fila não esta com tempo negativo(que o tempo dela nao expirou e o bot nao removeu por algum acaso)
-      if (queue.length > 0 && queue[0].endsAt < date) {
-        queue.shift();
+      if (queue.length > 0 && Number(queue[0].endsAt) < date) {
+        const filteredErrorPlayer = allPlayersQueue.filter(
+          (player) => player.id !== queue[0].id
+        );
+        allPlayersQueue = filteredErrorPlayer;
+        const changeQueue = queue.shift();
+        console.log(allPlayersQueue);
+        fs.writeFileSync(
+          `./src/magic-square/${floor}/${formattedChamber}`,
+          JSON.stringify(queue)
+        );
+        fs.writeFileSync(
+          "./src/players-on-queue.json",
+          JSON.stringify(filteredErrorPlayer)
+        );
       }
       //-----//
 
@@ -165,7 +178,7 @@ module.exports = {
 
       if (
         queue.length > 0 &&
-        date <= queue[0].endsAt - 300000 &&
+        date <= Number(queue[0].endsAt) - 300000 &&
         !hasClaimManager
       ) {
         await interaction.reply({
@@ -230,7 +243,7 @@ module.exports = {
       };
 
       //Coloca o player na fila e coloca a nova fila no respectivo arquivo json
-      queue.push(player);
+      const pushPlayer = queue.push(player);
 
       fs.writeFileSync(
         `./src/magic-square/${floor}/${formattedChamber}`,
@@ -239,7 +252,9 @@ module.exports = {
       //-----//
 
       //Coloca o player na fila do all-players-queue e escreve a nova fila no arquivo json
-      allPlayersQueue.push(playerForAllPlayersQueue);
+      const pushAllPlayersQueue = allPlayersQueue.push(
+        playerForAllPlayersQueue
+      );
       fs.writeFileSync(
         `./src/players-on-queue.json`,
         JSON.stringify(allPlayersQueue)
@@ -272,6 +287,7 @@ module.exports = {
           });
         }
       }
+
       //Conferir melhor essa função(RECADO)
       if (queue.length > 1 && queue[1].id === user.id) {
         let result = timeToEnter - 300000;
@@ -380,16 +396,18 @@ module.exports = {
       }
 
       const queueExit = endsAt - date;
-      console.log(queueExit);
+      console.log(`O usuario ${user.username} deve sair:`, queueExit);
       //conferir
 
       setTimeout(() => {
         //Verifica se o usuaria ainda esta na fila (pois pode ja ter usado um leave)
-        console.log("entrou");
+        console.log(`${user.username} entrou`);
         const allPlayersOnQueue = JSON.parse(
           fs.readFileSync("./src/players-on-queue.json")
         );
         const check = allPlayersOnQueue.find((player) => player.id === user.id);
+
+        console.log(check);
 
         let timeoutQueue = JSON.parse(
           fs.readFileSync(`./src/magic-square/${floor}/${formattedChamber}`)
@@ -405,6 +423,8 @@ module.exports = {
         }
         //-----//
 
+        console.log(`${user.username}passou das regras`);
+
         const newTimeoutQueue = timeoutQueue.shift();
         fs.writeFileSync(
           `./src/magic-square/${floor}/${formattedChamber}`,
@@ -417,6 +437,12 @@ module.exports = {
         fs.writeFileSync(
           `./src/players-on-queue.json`,
           JSON.stringify(filteredAllPlayersQueue)
+        );
+
+        console.log(`${user.username} fila apos ser retirado:`, timeoutQueue);
+        console.log(
+          `${user.username} all players queue apos ser retirado:`,
+          filteredAllPlayersQueue
         );
 
         if (timeoutQueue.length === 0) {
