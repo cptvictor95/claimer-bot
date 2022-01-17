@@ -143,13 +143,40 @@ module.exports = {
       queue = JSON.parse(
         fs.readFileSync(`./src/magic-square/${floor}/${formattedChamber}`)
       );
-      let queueDateCalc = eval(queue);
 
       let startedAt = date;
       let endsAt = startedAt;
       let timeToEnter;
 
-      //Verifica se a primeira pessoa na fila não esta com tempo negativo(que o tempo dela nao expirou e o bot nao removeu por algum acaso)
+      //Verifica se a primeira pessoa na fila não esta com tempo negativo(que o tempo dela nao expirou e o bot nao removeu por algum acaso), ou se as duas não estão negativas
+      if (
+        queue.length === 2 &&
+        Number(queue[0].endsAt) < date &&
+        Number(queue[1].endsAt) < date
+      ) {
+        const filterFirstErrorPlayer = allPlayersQueue.filter(
+          (player) => player.id !== queue[0].id
+        );
+
+        const filterSecondErrorPlayer = filterFirstErrorPlayer.filter(
+          (player) => player.id !== queue[1].id
+        );
+
+        queue = [];
+        
+        fs.writeFileSync(
+          `./src/magic-square/${floor}/${formattedChamber}`,
+          JSON.stringify(queue)
+        );
+
+        fs.writeFileSync(
+          "./src/players-on-queue.json",
+          JSON.stringify(filterSecondErrorPlayer)
+        );
+
+        allPlayersQueue = filterSecondErrorPlayer;
+      }
+
       if (queue.length > 0 && Number(queue[0].endsAt) < date) {
         const filteredErrorPlayer = allPlayersQueue.filter(
           (player) => player.id !== queue[0].id
@@ -166,9 +193,9 @@ module.exports = {
           JSON.stringify(filteredErrorPlayer)
         );
       }
-      //-----//
 
-      if (queueDateCalc.length >= 2) {
+      if (queue.length >= 2) {
+        //-----//
         await interaction.reply({
           content: `\n:no_entry_sign: <@${user.id}> essa fila está cheia! :no_entry_sign:`,
           ephemeral: true,
@@ -188,15 +215,15 @@ module.exports = {
         return;
       }
 
-      //Calcula o tempo que deve começar a vez do usuario que deu claim
-      if (queueDateCalc.length == 1) {
-        const endsAt01 = queueDateCalc[0].endsAt;
+      //Calcula o tempo que deve começar a vez do usuario que deu claim ()
+      if (queue.length == 1) {
+        const endsAt01 = queue[0].endsAt;
         startedAt = endsAt01;
       }
 
       endsAt = calcEndTime(tickets, startedAt);
 
-      if (queueDateCalc.length >= 0) {
+      if (queue.length >= 0) {
         timeToEnter = startedAt - date;
         ticketsInMs = endsAt - startedAt;
         minuteTimeToEnter = timeToEnter / 60000;
@@ -407,17 +434,20 @@ module.exports = {
         );
         const check = allPlayersOnQueue.find((player) => player.id === user.id);
 
-        console.log(check);
+        console.log("TimeouT Check", check);
 
         let timeoutQueue = JSON.parse(
           fs.readFileSync(`./src/magic-square/${floor}/${formattedChamber}`)
         );
+
         if (!check) {
           return;
         }
+
         if (timeoutQueue.length === 0) {
           return;
         }
+
         if (timeoutQueue[0].id !== user.id) {
           return;
         }
@@ -426,10 +456,12 @@ module.exports = {
         console.log(`${user.username}passou das regras`);
 
         const newTimeoutQueue = timeoutQueue.shift();
+
         fs.writeFileSync(
           `./src/magic-square/${floor}/${formattedChamber}`,
           JSON.stringify(timeoutQueue)
         );
+
         const filteredAllPlayersQueue = allPlayersQueue.filter(
           (player) => player.id !== user.id
         );
