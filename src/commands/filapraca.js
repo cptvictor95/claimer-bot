@@ -80,7 +80,7 @@ module.exports = {
         .setRequired(true)
         .addChoice("Esquerda", "left")
         .addChoice("Meio", "middle")
-        .addChoice("Right", "right")
+        .addChoice("Direita", "right")
     ),
 
   async execute(interaction) {
