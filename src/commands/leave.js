@@ -28,6 +28,7 @@ module.exports = {
       }
 
       const removeFromQueue = async () => {
+        console.log(`${user.id} allPlayers queue when use leave`, queue);
         const findPlayer = queue.find((player) => player.id === user.id);
 
         if (!findPlayer) {
@@ -83,13 +84,16 @@ module.exports = {
           );
 
           const newSoloQueue = soloQueue.shift();
+
           const filterSoloAllPlayersQueue = soloAllPlayersQueue.filter(
             (player) => player.id !== user.id
           );
+
           fs.writeFileSync(
             `./src/${place}/${findPlayer.floor}/${spot}`,
             JSON.stringify(soloQueue)
           );
+
           fs.writeFileSync(
             `./src/players-on-queue.json`,
             JSON.stringify(filterSoloAllPlayersQueue)
@@ -154,6 +158,11 @@ module.exports = {
             endsAt: nextEndsAt,
           };
 
+          console.log(
+            `${user.id} reconstrui o outro player ao usar leave:`,
+            player
+          );
+
           teste = [];
           const newQueue = teste.push(player);
           const nextEndTime = nextEndsAt - nextStartedAt;
@@ -161,13 +170,24 @@ module.exports = {
           const filterRemove = allPlayersteste.filter(
             (player) => player.id !== user.id
           );
+
           fs.writeFileSync(
             `./src/${place}/${findPlayer.floor}/${spot}`,
             JSON.stringify(teste)
           );
+
           fs.writeFileSync(
             `./src/players-on-queue.json`,
             JSON.stringify(filterRemove)
+          );
+
+          console.log(
+            `${user.id} all-players-queue após ser removido`,
+            filterRemove
+          );
+          console.log(
+            `${user.id} fila após ser removido e refeito player`,
+            teste
           );
 
           await interaction.reply(
@@ -201,12 +221,23 @@ module.exports = {
             let timeoutQueue = JSON.parse(
               fs.readFileSync(`./src/${place}/${floor}/${spot}`)
             );
+
+            console.log(
+              `${user.id} leave timeoutQueue (removing next player)`,
+              timeoutQueue
+            );
+
             const findPlayer = timeoutQueue.find(
-              (player) => player.id === timeoutQueue[0].id
+              (player) => player.id === nextUserId
             );
 
             let allPlayersTimeoutQueue = JSON.parse(
               fs.readFileSync(`./src/players-on-queue.json`)
+            );
+
+            console.log(
+              `${user.id} leave timeoutallplayersQueue (removing next player)`,
+              allPlayersTimeoutQueue
             );
 
             if (!findPlayer) {
@@ -234,6 +265,16 @@ module.exports = {
             fs.writeFileSync(
               `./src/players-on-queue.json`,
               JSON.stringify(timeoutFilterRemove)
+            );
+
+            console.log(
+              `${user.id} leave timeoutQueue (AFTER removing next player)`,
+              timeoutQueue
+            );
+
+            console.log(
+              `${user.id} leave timeoutQueue (AFTER removing next player)`,
+              timeoutFilterRemove
             );
 
             if (timeoutQueue.length === 0) {
@@ -265,21 +306,21 @@ module.exports = {
         }
         //[X]FUNCIONANDO E TESTADO 14/01
         if (queueOfPlayer.length === 2 && queueOfPlayer[1].id === user.id) {
-          let queue = JSON.parse(
+          let queue02 = JSON.parse(
             fs.readFileSync(`./src/${place}/${findPlayer.floor}/${spot}`)
           );
           let allPlayersQueue = JSON.parse(
             fs.readFileSync(`./src/players-on-queue.json`)
           );
 
-          const newQueue = queue.pop();
+          const newQueue = queue02.pop();
           const filterAllPlayersQueue = allPlayersQueue.filter(
             (player) => player.id !== user.id
           );
 
           fs.writeFileSync(
             `./src/${place}/${findPlayer.floor}/${spot}`,
-            JSON.stringify(queue)
+            JSON.stringify(queue02)
           );
           fs.writeFileSync(
             `./src/players-on-queue.json`,

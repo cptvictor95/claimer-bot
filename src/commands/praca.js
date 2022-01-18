@@ -163,7 +163,7 @@ module.exports = {
         );
 
         queue = [];
-        
+
         fs.writeFileSync(
           `./src/magic-square/${floor}/${formattedChamber}`,
           JSON.stringify(queue)
@@ -183,7 +183,6 @@ module.exports = {
         );
         allPlayersQueue = filteredErrorPlayer;
         const changeQueue = queue.shift();
-        console.log(allPlayersQueue);
         fs.writeFileSync(
           `./src/magic-square/${floor}/${formattedChamber}`,
           JSON.stringify(queue)
@@ -282,9 +281,15 @@ module.exports = {
       const pushAllPlayersQueue = allPlayersQueue.push(
         playerForAllPlayersQueue
       );
+
       fs.writeFileSync(
         `./src/players-on-queue.json`,
         JSON.stringify(allPlayersQueue)
+      );
+
+      console.log(
+        `${user.id} após ser colocado na all players`,
+        allPlayersQueue
       );
 
       //-----//
@@ -359,16 +364,17 @@ module.exports = {
             const attQueue = JSON.parse(
               fs.readFileSync(`./src/players-on-queue.json`)
             );
+
             const checkPlayer = attQueue.find(
               (player) => player.id === user.id
             );
-            if (!checkPlayer) {
-              return;
+
+            if (checkPlayer) {
+              channel.send({
+                content: `\n:rotating_light: <@${user.id}>, esteja pronto! Em 5 minutos você poderá entrar na Magic Square!\n ------------------`,
+                ephemeral: true,
+              });
             }
-            channel.send({
-              content: `\n:rotating_light: <@${user.id}>, esteja pronto! Em 5 minutos você poderá entrar na Magic Square!\n ------------------`,
-              ephemeral: true,
-            });
           }, result);
         } else {
           if (ticketsHoursCalc > 0) {
@@ -404,7 +410,6 @@ module.exports = {
               ephemeral: true,
             });
           }
-          //Este tambem precisa ser concertado
           setTimeout(() => {
             const secondAttQueue = JSON.parse(
               fs.readFileSync(`./src/players-on-queue.json`)
@@ -423,22 +428,29 @@ module.exports = {
       }
 
       const queueExit = endsAt - date;
-      console.log(`O usuario ${user.username} deve sair:`, queueExit);
       //conferir
 
       setTimeout(() => {
         //Verifica se o usuaria ainda esta na fila (pois pode ja ter usado um leave)
-        console.log(`${user.username} entrou`);
-        let allPlayersOnQueue = JSON.parse(
+        console.log(`${user.id} entrou`);
+
+        let allPlayersQueueTimeout = JSON.parse(
           fs.readFileSync("./src/players-on-queue.json")
         );
-        const check = allPlayersOnQueue.find((player) => player.id === user.id);
 
-        console.log("TimeouT Check", check);
+        console.log(
+          `AllPlayersQueue timeout de ${user.id}`,
+          allPlayersQueueTimeout
+        );
+
+        const check = allPlayersQueueTimeout.find(
+          (player) => player.id === user.id
+        );
 
         let timeoutQueue = JSON.parse(
           fs.readFileSync(`./src/magic-square/${floor}/${formattedChamber}`)
         );
+        console.log(`${user.id} timeoutQueue`, timeoutQueue);
 
         if (!check) {
           return;
@@ -462,7 +474,7 @@ module.exports = {
           JSON.stringify(timeoutQueue)
         );
 
-        const filteredAllPlayersQueue = allPlayersQueue.filter(
+        const filteredAllPlayersQueue = allPlayersQueueTimeout.filter(
           (player) => player.id !== user.id
         );
 
@@ -471,9 +483,9 @@ module.exports = {
           JSON.stringify(filteredAllPlayersQueue)
         );
 
-        console.log(`${user.username} fila apos ser retirado:`, timeoutQueue);
+        console.log(`${user.id} fila apos ser retirado:`, timeoutQueue);
         console.log(
-          `${user.username} all players queue apos ser retirado:`,
+          `${user.id} all players queue apos ser retirado:`,
           filteredAllPlayersQueue
         );
 
