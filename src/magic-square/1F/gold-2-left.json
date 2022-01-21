@@ -1,15 +1,1 @@
-[
-  {
-    "userName": "Italin",
-    "id": "241296423503659008",
-    "spot": {
-      "floor": "1F",
-      "name": "gold",
-      "number": "2",
-      "position": "left",
-      "tickets": "30"
-    },
-    "startedAt": 1642609199238,
-    "endsAt": 1642610999238
-  }
-]
+[]

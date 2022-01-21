@@ -5,16 +5,34 @@ const moment = require("moment-timezone");
 
 module.exports = {
   data: new SlashCommandBuilder()
-    .setName("filapiso")
-    .setDescription("Verifica as filas que ja foram claimadas por andar"),
+    .setName("filachamber")
+    .setDescription(
+      "Escolha as filas que deseja ver dentre: experience, gold ou magic-stone"
+    )
+    .addStringOption((option) =>
+      option
+        .setName("chambername")
+        .setDescription(
+          "Magic Square Chamber Name (Gold/White Silver/Experience/Training/Magic Stone)"
+        )
+        .setRequired(true)
+        .addChoice("Gold Chamber", "gold")
+        .addChoice("Experience Chamber", "experience")
+        .addChoice("Magic Stone Chamber", "magic-stone")
+    ),
 
   async execute(interaction) {
     try {
+      const chamberName = interaction.options.getString("chambername");
       const channel = interaction.channel;
-      const floor = channel.name.slice(0, 2).toUpperCase();
-      const floorQueues = fs.readdirSync(`./src/magic-square/${floor}`);
       let queues = {};
       let messagesString;
+      let uiChamberName;
+
+      const floor = channel.name.slice(0, 2).toUpperCase();
+      const floorQueues = fs
+        .readdirSync(`./src/magic-square/${floor}`)
+        .filter((file) => file.startsWith(`${chamberName}`));
 
       const mapNonEmptyQueues = floorQueues.map((queue) => {
         let queueFile = JSON.parse(
@@ -26,9 +44,10 @@ module.exports = {
           });
         }
       });
+
       if (mapNonEmptyQueues.every((queue) => queue === undefined)) {
         interaction.reply(
-          `:loudspeaker: Não ha ninguem em nenhuma fila nesse andar \n  ------------------`
+          `:loudspeaker: Não ha ninguem em nenhuma fila nesse andar e chamber especifica! \n  ------------------`
         );
         return;
       }
@@ -83,8 +102,22 @@ module.exports = {
 
       messagesString = adjustClaimableTime.join();
 
+      switch (chamberName) {
+        case "gold":
+          uiChamberName = "Gold Chamber";
+          break;
+        case "experience":
+          uiChamberName = "Experience Chamber";
+          break;
+        case "magic-stone":
+          uiChamberName = "Magic Stone Chamber";
+          break;
+        default:
+          break;
+      }
+
       interaction.reply({
-        content: `:arrow_down:  AS FILAS CLAIMADAS NO ${floor} SÃO  :arrow_down: \n${messagesString} \n\n :loudspeaker: Todas as outras não listadas a cima estão livre \n------------------`,
+        content: `:arrow_down:  AS FILAS CLAIMADAS NA ${uiChamberName.toUpperCase()} ${floor} SÃO  :arrow_down: \n${messagesString} \n\n :loudspeaker: Todas as outras não listadas a cima estão livre\n ------------------`,
         ephemeral: true,
       });
     } catch (error) {
