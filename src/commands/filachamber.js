@@ -29,7 +29,26 @@ module.exports = {
       let messagesString;
       let uiChamberName;
 
-      const floor = channel.name.slice(0, 2).toUpperCase();
+      let floor;
+
+      if (channel.name.includes("1f")) {
+        floor = "1F";
+      }
+      if (channel.name.includes("2f")) {
+        floor = "2F";
+      }
+      if (channel.name.includes("3f")) {
+        floor = "3F";
+      }
+      if (channel.name.includes("4f")) {
+        floor = "4F";
+      }
+      if (channel.name.includes("5f")) {
+        floor = "5F";
+      }
+      if (channel.name.includes("6f")) {
+        floor = "6F";
+      }
       const floorQueues = fs
         .readdirSync(`./src/magic-square/${floor}`)
         .filter((file) => file.startsWith(`${chamberName}`));

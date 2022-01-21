@@ -75,6 +75,7 @@ module.exports = {
         });
         return;
       }
+      
       if (queueFile.length == 1) {
         await interaction.reply({
           ephemeral: true,
