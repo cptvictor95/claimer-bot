@@ -2,6 +2,7 @@ const { SlashCommandBuilder } = require("@discordjs/builders");
 const fs = require("fs");
 const { calcEndTime } = require("../utils/calcEndTime");
 const moment = require("moment-timezone");
+const { verifyWritePlayer } = require("../utils/verifyWritePlayer");
 const guildId =
   process.env.NODE_ENV === "dev"
     ? process.env.DEV_GUILD_ID
@@ -177,7 +178,7 @@ module.exports = {
         allPlayersQueue = filterSecondErrorPlayer;
       }
 
-      if (queue.length > 0 && Number(queue[0].endsAt) < date) {
+      if (queue.length > 0 && queue[0].endsAt < date) {
         const filteredErrorPlayer = allPlayersQueue.filter(
           (player) => player.id !== queue[0].id
         );
@@ -287,10 +288,52 @@ module.exports = {
         JSON.stringify(allPlayersQueue)
       );
 
+      const queueString = `./src/magic-square/${floor}/${formattedChamber}`;
+
+      const verifyJsonWrite = verifyWritePlayer(user.id, queueString);
+
+      if (verifyJsonWrite === "false") {
+        await interaction.reply(
+          `:warning: <@${user.id}> Um erro inesperado aconteceu e seu claim não foi efetivado, por favor refaça o claim!`
+        );
+
+        return;
+      }
+      if (verifyJsonWrite === "partially") {
+        await interaction.reply(
+          `:warning: <@${user.id}> Um erro inesperado aconteceu e seu claim não foi efetivado, por favor refaça o claim!`
+        );
+        const verifyAllPlayersQueue = allPlayersQueue.find(
+          (player) => player.id
+        );
+        const verifyQueue = queue.find((player) => player.id);
+        if (verifyAllPlayersQueue !== undefined) {
+          const filteredVerify = allPlayersQueue.filter(
+            (player) => player.id !== user.id
+          );
+          fs.writeFileSync(
+            `./src/players-on-queue.json`,
+            JSON.stringify(filteredVerify)
+          );
+        }
+        if (verifyQueue !== undefined) {
+          const filteredQueueVerify = queue.filter(
+            (player) => player.id !== user.id
+          );
+          fs.writeFileSync(
+            `./src/magic-square/${floor}/${formattedChamber}`,
+            JSON.stringify(filteredQueueVerify)
+          );
+        }
+        return;
+      }
       console.log(
         `${user.id} após ser colocado na all players`,
         allPlayersQueue
       );
+      console.log(`${user.id} após ser colocado na queue`, queue);
+
+      const queueExit = endsAt - date;
 
       //-----//
 
@@ -410,6 +453,7 @@ module.exports = {
               ephemeral: true,
             });
           }
+
           setTimeout(() => {
             const secondAttQueue = JSON.parse(
               fs.readFileSync(`./src/players-on-queue.json`)
@@ -426,9 +470,7 @@ module.exports = {
           }, result);
         }
       }
-
-      const queueExit = endsAt - date;
-      //conferir
+      console.log(queueExit);
 
       setTimeout(() => {
         //Verifica se o usuaria ainda esta na fila (pois pode ja ter usado um leave)
