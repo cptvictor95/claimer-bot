@@ -476,6 +476,8 @@ module.exports = {
         //Verifica se o usuaria ainda esta na fila (pois pode ja ter usado um leave)
         console.log(`${user.id} entrou`);
 
+        const timeoutDate = Date.now();
+
         let allPlayersQueueTimeout = JSON.parse(
           fs.readFileSync("./src/players-on-queue.json")
         );
@@ -492,6 +494,7 @@ module.exports = {
         let timeoutQueue = JSON.parse(
           fs.readFileSync(`./src/magic-square/${floor}/${formattedChamber}`)
         );
+
         console.log(`${user.id} timeoutQueue`, timeoutQueue);
 
         if (!check) {
@@ -503,6 +506,11 @@ module.exports = {
         }
 
         if (timeoutQueue[0].id !== user.id) {
+          return;
+        }
+
+      
+        if (timeoutDate < timeoutQueue[0].endsAt) {
           return;
         }
         //-----//
