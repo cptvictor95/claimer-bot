@@ -509,8 +509,7 @@ module.exports = {
           return;
         }
 
-        //Preciso impedir que o usuario seja removido antes da fila, vendo o endsAt e comparando a data Atual
-        //13:20 ----> tocka as 13:00
+      
         if (timeoutDate < timeoutQueue[0].endsAt) {
           return;
         }
