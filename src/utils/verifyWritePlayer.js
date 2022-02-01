@@ -10,6 +10,7 @@ module.exports = {
     const verifyAllQueues = allPlayersQueue.find(
       (player) => player.id === userId
     );
+
     if (queue.length > 0) {
       if (verifyQueue === undefined) {
         const verifyAllPlayersQueue = allPlayersQueue.find(
@@ -21,12 +22,14 @@ module.exports = {
         return "partially";
       }
     }
+
     if (queue.length === 0) {
       if (verifyAllQueues !== undefined) {
         return "partially";
       }
       return "false";
     }
+
     if (verifyAllQueues === undefined) {
       if (verifyQueue !== undefined) {
         return "partially";
