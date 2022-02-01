@@ -3,22 +3,24 @@ const fs = require("fs");
 const { calcEndTime } = require("../utils/calcEndTime");
 const moment = require("moment-timezone");
 const { verifyWritePlayer } = require("../utils/verifyWritePlayer");
+const { formatTicketsTime } = require("../utils/formatTicketsTime");
+const { handleGhostPlayer } = require("../utils/handleGhostPlayer");
 const guildId =
   process.env.NODE_ENV === "dev"
     ? process.env.DEV_GUILD_ID
     : process.env.PROD_GUILD_ID;
 
-/* --[]Deve colocar o usuario na fila 
-   --[]Certificar que o claim não pode ser realizado antes dos 5min do prox acabar
-   --[]Certificar que o usuario ja não esta em algum fila
-   --[]Certificar a fila ja não esta cheia
-   --[]Certificar que o horario é calculado certo dependendo da posição do usuario
-   --[]Certificar que o tempo de saida corresponde ao tempo certo baseado na posição do usuario
-   --[]Certificar o envio da mensagem e seu conteudo formatado e correto
-   --[]Certificar que o envio da mensagem esta baseado na posição de quem realizou o claim
-   --[]Certificar que quando o usuario que deu claim for tirado da fila a mensagem certa baseado em como esta a fila
-   -----[]Se a fila esta vazia
-   -----[]Se a fila tem mais uma pessoa
+/* --[X]Deve colocar o usuario na fila 
+   --[X]Certificar que o claim não pode ser realizado antes dos 5min do prox acabar
+   --[X]Certificar que o usuario ja não esta em algum fila
+   --[X]Certificar a fila ja não esta cheia
+   --[X]Certificar que o horario é calculado certo dependendo da posição do usuario
+   --[X]Certificar que o tempo de saida corresponde ao tempo certo baseado na posição do usuario
+   --[X]Certificar o envio da mensagem e seu conteudo formatado e correto
+   --[X]Certificar que o envio da mensagem esta baseado na posição de quem realizou o claim
+   --[X]Certificar que quando o usuario que deu claim for tirado da fila a mensagem certa baseado em como esta a fila
+   -----[X]Se a fila esta vazia
+   -----[X]Se a fila tem mais uma pessoa
  */
 
 module.exports = {
@@ -38,6 +40,7 @@ module.exports = {
         .addChoice("4F", "4F")
         .addChoice("5F", "5F")
         .addChoice("6F", "6F")
+        .addChoice("7F", "7F")
     )
     .addStringOption((option) =>
       option
@@ -107,16 +110,20 @@ module.exports = {
       );
       const userRoles = interaction.member.roles.cache.map((role) => role.name);
       const hasClaimManager = userRoles.includes("claim manager");
+      const formattedChamber = `${chamberName}-${chamberNumber}-${position}.json`; //Tirar o .json
+      const queueString = `./src/magic-square/${floor}/${formattedChamber}`;
 
       let allPlayersQueue = JSON.parse(
         fs.readFileSync("./src/players-on-queue.json")
       );
-      let seconds;
-      let minutes;
-      let hours;
-      let formattedDate;
-      let formattedTicket;
-      let ticketsHoursCalc;
+      let startedAt = date;
+      let endsAt = startedAt;
+      let queue;
+      queue = JSON.parse(
+        fs.readFileSync(`./src/magic-square/${floor}/${formattedChamber}`)
+      );
+
+      //Verificações como se o comando foi usado no canal certo, se a pessoa ja não esta na fila e etc...
 
       if (!channel.name.includes(`${floor.toLowerCase()}-claim-praca`)) {
         await interaction.reply({
@@ -138,64 +145,20 @@ module.exports = {
         return;
       }
 
-      const formattedChamber = `${chamberName}-${chamberNumber}-${position}.json`;
+      //Verifica se o bot falhou e nao retirou os dois usuario na hora certa, depois disso retira os usuarios do JSON e let para seguir os calculos(TRANSOFORMAR EM UMA FUNÇÃO UNICA)
 
-      let queue;
-      queue = JSON.parse(
-        fs.readFileSync(`./src/magic-square/${floor}/${formattedChamber}`)
+      const formattedValues = handleGhostPlayer(
+        queue,
+        allPlayersQueue,
+        queueString,
+        date
       );
+      queue = formattedValues.queue;
+      allPlayersQueue = formattedValues.allPlayersQueue;
 
-      let startedAt = date;
-      let endsAt = startedAt;
-      let timeToEnter;
-
-      //Verifica se a primeira pessoa na fila não esta com tempo negativo(que o tempo dela nao expirou e o bot nao removeu por algum acaso), ou se as duas não estão negativas
-      if (
-        queue.length === 2 &&
-        Number(queue[0].endsAt) < date &&
-        Number(queue[1].endsAt) < date
-      ) {
-        const filterFirstErrorPlayer = allPlayersQueue.filter(
-          (player) => player.id !== queue[0].id
-        );
-
-        const filterSecondErrorPlayer = filterFirstErrorPlayer.filter(
-          (player) => player.id !== queue[1].id
-        );
-
-        queue = [];
-
-        fs.writeFileSync(
-          `./src/magic-square/${floor}/${formattedChamber}`,
-          JSON.stringify(queue)
-        );
-
-        fs.writeFileSync(
-          "./src/players-on-queue.json",
-          JSON.stringify(filterSecondErrorPlayer)
-        );
-
-        allPlayersQueue = filterSecondErrorPlayer;
-      }
-
-      if (queue.length > 0 && queue[0].endsAt < date) {
-        const filteredErrorPlayer = allPlayersQueue.filter(
-          (player) => player.id !== queue[0].id
-        );
-        allPlayersQueue = filteredErrorPlayer;
-        const changeQueue = queue.shift();
-        fs.writeFileSync(
-          `./src/magic-square/${floor}/${formattedChamber}`,
-          JSON.stringify(queue)
-        );
-        fs.writeFileSync(
-          "./src/players-on-queue.json",
-          JSON.stringify(filteredErrorPlayer)
-        );
-      }
+      //-----//
 
       if (queue.length >= 2) {
-        //-----//
         await interaction.reply({
           content: `\n:no_entry_sign: <@${user.id}> essa fila está cheia! :no_entry_sign:`,
           ephemeral: true,
@@ -214,8 +177,9 @@ module.exports = {
         });
         return;
       }
+      //-----//
 
-      //Calcula o tempo que deve começar a vez do usuario que deu claim ()
+      //Calcula o tempo que deve começar a vez do usuario que deu claim e seu horario de termino, alem de formatar algumas datas para ser mostrada ao usuario
       if (queue.length == 1) {
         const endsAt01 = queue[0].endsAt;
         startedAt = endsAt01;
@@ -223,31 +187,17 @@ module.exports = {
 
       endsAt = calcEndTime(tickets, startedAt);
 
-      if (queue.length >= 0) {
-        timeToEnter = startedAt - date;
-        ticketsInMs = endsAt - startedAt;
-        minuteTimeToEnter = timeToEnter / 60000;
-        seconds = Math.floor(timeToEnter / 1000) % 60;
-        minutes = Math.floor((timeToEnter / (1000 * 60)) % 60);
-        hours = Math.floor((timeToEnter / (1000 * 60 * 60)) % 24);
-        hours = hours < 10 ? "0" + hours : hours;
-        minutes = minutes < 10 ? "0" + minutes : minutes;
-        seconds = seconds < 10 ? "0" + seconds : seconds;
-
-        let ticketsSecCalc = Math.floor(ticketsInMs / 1000) % 60;
-        let ticketsMinCalc = Math.floor((ticketsInMs / (1000 * 60)) % 60);
-        ticketsHoursCalc = Math.floor((ticketsInMs / (1000 * 60 * 60)) % 24);
-        ticketsHoursCalc =
-          ticketsHoursCalc < 10 ? "0" + ticketsHoursCalc : ticketsHoursCalc;
-        ticketsMinCalc =
-          ticketsMinCalc < 10 ? "0" + ticketsMinCalc : ticketsMinCalc;
-        ticketsSecCalc =
-          ticketsSecCalc < 10 ? "0" + ticketsSecCalc : ticketsSecCalc;
-        formattedDate = hours + ":" + minutes + ":" + seconds;
-        formattedTicket =
-          ticketsHoursCalc + ":" + ticketsMinCalc + ":" + ticketsSecCalc;
-      }
+      let {
+        formattedTicket = formattedTicket,
+        formattedDate = formattedDate,
+        ticketsHoursCalc = ticketsHoursCalc,
+        minutes = minutes,
+        hours = hours,
+        timeToEnter = timeToEnter,
+      } = formatTicketsTime(startedAt, endsAt, date);
       //-----//
+
+      //Cria os objetos baseado no player que vai para as 2 queues
       const player = {
         userName: interaction.user.username,
         id: user.id,
@@ -268,17 +218,16 @@ module.exports = {
         floor: floor,
         spot: formattedChamber,
       };
+      //-----//
 
-      //Coloca o player na fila e coloca a nova fila no respectivo arquivo json
+      //Coloca o player na fila e coloca a nova fila nos dois arquivos JSON
       const pushPlayer = queue.push(player);
 
       fs.writeFileSync(
         `./src/magic-square/${floor}/${formattedChamber}`,
         JSON.stringify(queue)
       );
-      //-----//
 
-      //Coloca o player na fila do all-players-queue e escreve a nova fila no arquivo json
       const pushAllPlayersQueue = allPlayersQueue.push(
         playerForAllPlayersQueue
       );
@@ -287,9 +236,9 @@ module.exports = {
         `./src/players-on-queue.json`,
         JSON.stringify(allPlayersQueue)
       );
+      //-----//
 
-      const queueString = `./src/magic-square/${floor}/${formattedChamber}`;
-
+      //Realiza um teste unitario na função de colocar o player nas 2 filas, volta 3 opções sendo uma false (nao entrou em nenhuma), true(entrou em todas), partially(entrou em uma)
       const verifyJsonWrite = verifyWritePlayer(user.id, queueString);
 
       if (verifyJsonWrite === "false") {
@@ -303,39 +252,47 @@ module.exports = {
         await interaction.reply(
           `:warning: <@${user.id}> Um erro inesperado aconteceu e seu claim não foi efetivado, por favor refaça o claim!`
         );
+
         const verifyAllPlayersQueue = allPlayersQueue.find(
           (player) => player.id
         );
         const verifyQueue = queue.find((player) => player.id);
+
         if (verifyAllPlayersQueue !== undefined) {
           const filteredVerify = allPlayersQueue.filter(
             (player) => player.id !== user.id
           );
+
           fs.writeFileSync(
             `./src/players-on-queue.json`,
             JSON.stringify(filteredVerify)
           );
         }
+
         if (verifyQueue !== undefined) {
           const filteredQueueVerify = queue.filter(
             (player) => player.id !== user.id
           );
+
           fs.writeFileSync(
             `./src/magic-square/${floor}/${formattedChamber}`,
             JSON.stringify(filteredQueueVerify)
           );
         }
+
         return;
       }
+
       console.log(
         `${user.id} após ser colocado na all players`,
         allPlayersQueue
       );
       console.log(`${user.id} após ser colocado na queue`, queue);
+      //-----//
 
       const queueExit = endsAt - date;
 
-      //-----//
+      //Começa a enviar as mensagens de acordo com a situação da fila e tambem os tickets e tempo restante para entrar.
 
       if (queue.length === 1 && queue[0].id === user.id) {
         if (ticketsHoursCalc > 0) {
@@ -363,7 +320,6 @@ module.exports = {
         }
       }
 
-      //Conferir melhor essa função(RECADO)
       if (queue.length > 1 && queue[1].id === user.id) {
         let result = timeToEnter - 300000;
         if (minutes + hours > 0) {
@@ -402,7 +358,6 @@ module.exports = {
               ephemeral: true,
             });
           }
-          //Precisa arrumar este timeout, result provavelmente nao esta certo!(RECADO)
           setTimeout(() => {
             const attQueue = JSON.parse(
               fs.readFileSync(`./src/players-on-queue.json`)
@@ -470,21 +425,14 @@ module.exports = {
           }, result);
         }
       }
-      console.log(queueExit);
+      //-----//
 
+      //Timeout para retirar a pessoa da fila, começando com testes para verificar se a pessoa nao saiu da fila ou alterou seu ticket, depois remove o player e manda a mensagem
       setTimeout(() => {
-        //Verifica se o usuaria ainda esta na fila (pois pode ja ter usado um leave)
-        console.log(`${user.id} entrou`);
-
         const timeoutDate = Date.now();
 
         let allPlayersQueueTimeout = JSON.parse(
           fs.readFileSync("./src/players-on-queue.json")
-        );
-
-        console.log(
-          `AllPlayersQueue timeout de ${user.id}`,
-          allPlayersQueueTimeout
         );
 
         const check = allPlayersQueueTimeout.find(
@@ -494,8 +442,6 @@ module.exports = {
         let timeoutQueue = JSON.parse(
           fs.readFileSync(`./src/magic-square/${floor}/${formattedChamber}`)
         );
-
-        console.log(`${user.id} timeoutQueue`, timeoutQueue);
 
         if (!check) {
           return;
@@ -509,16 +455,14 @@ module.exports = {
           return;
         }
 
-        //Preciso impedir que o usuario seja removido antes da fila, vendo o endsAt e comparando a data Atual
-        //13:20 ----> tocka as 13:00
         if (timeoutDate < timeoutQueue[0].endsAt) {
           return;
         }
-        //-----//
+        //-----------//
 
-        console.log(`${user.username}passou das regras`);
-
+        //Tentar tirar as variaveis na hora de mudar uma LET
         const newTimeoutQueue = timeoutQueue.shift();
+        //-----------//
 
         fs.writeFileSync(
           `./src/magic-square/${floor}/${formattedChamber}`,
@@ -532,12 +476,6 @@ module.exports = {
         fs.writeFileSync(
           `./src/players-on-queue.json`,
           JSON.stringify(filteredAllPlayersQueue)
-        );
-
-        console.log(`${user.id} fila apos ser retirado:`, timeoutQueue);
-        console.log(
-          `${user.id} all players queue apos ser retirado:`,
-          filteredAllPlayersQueue
         );
 
         if (timeoutQueue.length === 0) {
@@ -575,6 +513,7 @@ module.exports = {
           );
         }
       }, queueExit);
+      //-----//
     } catch (error) {
       await interaction.reply({
         content: `Um erro aconteceu ao executar esse comando, por favor verifique com a staff.\nError:${error.message}`,
