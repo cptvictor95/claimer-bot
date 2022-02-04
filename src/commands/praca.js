@@ -147,14 +147,14 @@ module.exports = {
 
       //Verifica se o bot falhou e nao retirou os dois usuario na hora certa, depois disso retira os usuarios do JSON e let para seguir os calculos(TRANSOFORMAR EM UMA FUNÇÃO UNICA)
 
-      const formattedValues = handleGhostPlayer(
-        queue,
-        allPlayersQueue,
-        queueString,
-        date
-      );
-      queue = formattedValues.queue;
-      allPlayersQueue = formattedValues.allPlayersQueue;
+      // const formattedValues = handleGhostPlayer(
+      //   queue,
+      //   allPlayersQueue,
+      //   queueString,
+      //   date
+      // );
+      // queue = formattedValues.queue;
+      // allPlayersQueue = formattedValues.allPlayersQueue;
 
       //-----//
 
@@ -221,16 +221,14 @@ module.exports = {
       //-----//
 
       //Coloca o player na fila e coloca a nova fila nos dois arquivos JSON
-      const pushPlayer = queue.push(player);
+      queue.push(player);
 
       fs.writeFileSync(
         `./src/magic-square/${floor}/${formattedChamber}`,
         JSON.stringify(queue)
       );
 
-      const pushAllPlayersQueue = allPlayersQueue.push(
-        playerForAllPlayersQueue
-      );
+      allPlayersQueue.push(playerForAllPlayersQueue);
 
       fs.writeFileSync(
         `./src/players-on-queue.json`,
@@ -455,7 +453,6 @@ module.exports = {
           return;
         }
 
-      
         if (timeoutDate < timeoutQueue[0].endsAt) {
           return;
         }
